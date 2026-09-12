@@ -227,3 +227,12 @@ Doctor 会按 UTF-8 字节计算项目规则回复序列化后的大小，并与
 ## Kiro 生命周期 hooks
 
 Kiro CLI V3 会为所有 agent（包括默认 agent）加载 `~/.kiro/hooks/teamai.json`。pull 和 hook 注入会安装其中的 SessionStart hook，无需先同步团队 agent。`hooks list` 和 `doctor` 检查它；移除 hooks 或用户级卸载会删除它，项目级卸载保留这份共享用户 hook。同名个人文件会被保留并提示。启用独立 hook 前，pull 和 hook 注入会从现有 Kiro agent（包括成员编辑过的副本）中仅移除 TeamAI 旧的 `agentSpawn` 命令，保留个人 hooks 和 agent 字段。生命周期集成需要 V3，Kiro 2.x 不加载这份独立 hook。
+
+## Kimi Code CLI
+
+Kimi Code CLI 是内置目标（`--agent kimi`），通过 `~/.kimi-code`（或 `$KIMI_CODE_HOME`）检测。
+
+- **Skills** 写入 `.kimi-code/skills/`，**子代理**写入 `.kimi-code/agents/*.md`，采用 Kimi 的 Markdown 格式：`name`、`description` 和 `tools` 白名单。Claude 的工具名会转换为 Kimi 的名字（`Task` 转为 `Agent`），不写 `model`。Kimi 专有字段（`whenToUse`、`disallowedTools`、`subagents`、`override`）经 `tool_extras.kimi` 往返保留。
+- **Rules**：Kimi 不读取 rules 目录，其 `SessionStart` hook 也无法注入上下文，所以团队规则在用户级和工作区级都写成 `.kimi-code/AGENTS.md` 里由 teamai 管理的块。带路径范围的规则在那里对所有任务生效。块以外你自己的内容会保留；团队删掉最后一条规则时，块随之删除。
+- **团队文化、共享指令和 recall 块**写入同一个 `AGENTS.md`。
+- **Hooks** 无论哪个 scope，都写成用户级 `~/.kimi-code/config.toml` 中的 `[[hooks]]` 条目。该目录还不存在时 pull 会跳过；启用了 `kimi` 时会给出警告：先运行一次 Kimi Code，再执行 `teamai pull`。`teamai doctor` 会检查 `config.toml` 中是否有 teamai 的条目。

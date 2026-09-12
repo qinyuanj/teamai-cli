@@ -110,6 +110,7 @@ async function removeAdapterHooks(adapter: HookAdapterId, dir: string): Promise<
         case 'openclaw-hook':
         case 'dsh-hooks':
         case 'kiro-hooks':
+        case 'kimi-hooks':
             return;
         default: {
             const unhandled: never = adapter;

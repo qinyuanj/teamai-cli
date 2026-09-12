@@ -683,6 +683,11 @@ export const DEFAULT_TOOL_PATHS = {
     agents: '.agents/agents',
     userScope: { skills: '.config/muse/skills', settings: '.config/muse/settings.json', agents: '.config/muse/agents' },
   },
+  // Kimi Code CLI scans .kimi-code/skills and .kimi-code/agents and loads
+  // .kimi-code/AGENTS.md as instructions. It reads no rules directory, so the
+  // team rules are a block in that AGENTS.md in both scopes (tools.ts). Its
+  // hooks are `[[hooks]]` tables in the user-level config.toml (kimi-hooks.ts).
+  kimi: { skills: '.kimi-code/skills', agents: '.kimi-code/agents', claudemd: '.kimi-code/AGENTS.md' },
 } satisfies Record<string, z.infer<typeof ToolPathsSchema>>;
 
 /** A built-in tool. Custom tools in a team's `toolPaths` stay plain strings. */

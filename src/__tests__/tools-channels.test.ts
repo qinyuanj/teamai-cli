@@ -47,7 +47,7 @@ const BEFORE: {
   },
   agentTools: [
     'claude', 'claude-internal', 'tclaude', 'codebuddy', 'codex', 'codex-internal', 'tcodex', 'cursor', 'copilot', 'joycode',
-    'qoder', 'qoder-cn', 'kiro', 'zcode', 'omp', 'opencode', 'workbuddy', 'muse',
+    'qoder', 'qoder-cn', 'kiro', 'zcode', 'omp', 'opencode', 'workbuddy', 'muse', 'kimi',
   ],
   hookFormats: { copilot: 'copilot', codex: 'codex', 'codex-internal': 'codex', tcodex: 'codex', muse: 'codex', zcode: 'zcode', cursor: 'cursor' },
 };

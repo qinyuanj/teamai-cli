@@ -227,3 +227,12 @@ Doctor measures the serialized project-rules reply in UTF-8 bytes against `hooks
 ## Kiro lifecycle hooks
 
 Kiro CLI V3 loads `~/.kiro/hooks/teamai.json` for every agent, including the default agent. Pull and hook injection install its SessionStart hook without requiring a team agent. Before enabling it, they remove only TeamAI’s old agentSpawn command from existing Kiro agents, including member-edited copies, preserving personal hooks and agent fields. `hooks list` and `doctor` check it; hook removal and user uninstall remove it. Project uninstall preserves this shared user hook. A same-named personal file is kept and reported. Pull removes the old managed `agentSpawn` entry from rendered team agents while preserving custom hooks. Lifecycle integration requires V3; Kiro 2.x does not load this standalone hook.
+
+## Kimi Code CLI
+
+Kimi Code CLI is a built-in target (`--agent kimi`), detected from `~/.kimi-code` (or `$KIMI_CODE_HOME`).
+
+- **Skills** go to `.kimi-code/skills/` and **subagents** to `.kimi-code/agents/*.md`, in Kimi's Markdown format: `name`, `description` and a `tools` allowlist. Claude tool names are translated to Kimi's (`Task` becomes `Agent`); `model` is not written. Kimi-only fields (`whenToUse`, `disallowedTools`, `subagents`, `override`) round-trip through `tool_extras.kimi`.
+- **Rules**: Kimi reads no rules directory, and its `SessionStart` hook cannot add context, so the team rules are a teamai-managed block in `.kimi-code/AGENTS.md`, in user and workspace scope alike. Path-scoped rules apply to every task there. Your own content outside the block is kept; the block goes when the team's last rule does.
+- **Culture, shared instructions and the recall block** go to the same `AGENTS.md`.
+- **Hooks** are `[[hooks]]` entries in the user-level `~/.kimi-code/config.toml`, whatever the scope. When that directory does not exist yet, pull skips them, warning when `kimi` is enabled: run Kimi Code once, then `teamai pull`. `teamai doctor` checks that `config.toml` carries the teamai entries.

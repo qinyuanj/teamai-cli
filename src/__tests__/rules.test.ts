@@ -1886,6 +1886,112 @@ describe('inlinedRulesText — rules inlined into one instructions file (#938)',
   });
 });
 
+describe('RulesHandler.pullAllRules — Kimi Code CLI inline rules', () => {
+  let tmpDir: string;
+  let homeDir: string;
+  let handler: RulesHandler;
+  let teamConfig: TeamaiConfig;
+  let localConfig: LocalConfig;
+
+  beforeEach(async () => {
+    tmpDir = await fse.mkdtemp(path.join(os.tmpdir(), 'teamai-rules-kimi-'));
+    homeDir = path.join(tmpDir, 'home');
+    const repoPath = path.join(tmpDir, 'team-repo');
+    await fse.ensureDir(path.join(repoPath, 'rules'));
+    // Kimi installed at user scope: ~/.kimi-code present.
+    await fse.ensureDir(path.join(homeDir, '.kimi-code'));
+    vi.stubEnv('HOME', homeDir);
+
+    handler = new RulesHandler();
+    teamConfig = {
+      team: 'test', description: '', repo: 'r', provider: 'tgit' as const, reviewers: [],
+      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      toolPaths: {
+        kimi: { skills: '.kimi-code/skills', agents: '.kimi-code/agents', claudemd: '.kimi-code/AGENTS.md' },
+      },
+    } as unknown as TeamaiConfig;
+
+    localConfig = {
+      repo: { localPath: repoPath, remote: 'r' },
+      username: 'u', additionalRoles: [], scope: 'user',
+    } as unknown as LocalConfig;
+  });
+
+  afterEach(async () => {
+    vi.unstubAllEnvs();
+    await fse.remove(tmpDir);
+  });
+
+  const agentsMd = () => path.join(homeDir, '.kimi-code', 'AGENTS.md');
+  const teamRule = (name: string) => path.join(localConfig.repo.localPath, 'rules', `${name}.md`);
+
+  it('inlines rule bodies (frontmatter rendered as text) into a managed block of .kimi-code/AGENTS.md', async () => {
+    await fse.writeFile(teamRule('coding'), '---\npaths: ["src/**"]\n---\n# Coding\nUse tabs.\n');
+    await fse.writeFile(teamRule('review'), 'Always review.\n');
+
+    await handler.pullAllRules(teamConfig, localConfig);
+
+    const content = await fse.readFile(agentsMd(), 'utf8');
+    expect(content).toContain('<!-- [teamai:team-rules:start] -->');
+    expect(content).toContain('<!-- [teamai:team-rules:end] -->');
+    expect(content).toContain('# Coding\nUse tabs.');
+    expect(content).toContain('Always review.');
+    expect(content).not.toContain('paths:');
+    // Kimi never reads a rules dir, so no file copies must be left behind.
+    expect(await fse.pathExists(path.join(homeDir, '.kimi-code', 'rules'))).toBe(false);
+  });
+
+  it('preserves user content around the block and replaces the block on re-pull', async () => {
+    await fse.writeFile(agentsMd(), '# Mine\nkeep me\n');
+    await fse.writeFile(teamRule('a'), 'rule A');
+    await handler.pullAllRules(teamConfig, localConfig);
+
+    await fse.writeFile(teamRule('a'), 'rule A v2');
+    await handler.pullAllRules(teamConfig, localConfig);
+
+    const content = await fse.readFile(agentsMd(), 'utf8');
+    expect(content.startsWith('# Mine\nkeep me')).toBe(true);
+    expect(content).toContain('rule A v2');
+    expect(content).not.toContain('rule A\n');
+    expect(content.match(/teamai:team-rules:start/g)).toHaveLength(1);
+  });
+
+  it('removes the block when the team has no rules left, keeping user content', async () => {
+    await fse.writeFile(agentsMd(), '# Mine\n');
+    await fse.writeFile(teamRule('a'), 'rule A');
+    await handler.pullAllRules(teamConfig, localConfig);
+    expect(await fse.readFile(agentsMd(), 'utf8')).toContain('rule A');
+
+    await fse.remove(teamRule('a'));
+    await handler.pullAllRules(teamConfig, localConfig);
+
+    const content = await fse.readFile(agentsMd(), 'utf8');
+    expect(content.trim()).toBe('# Mine');
+    expect(content).not.toContain('teamai:team-rules');
+  });
+
+  it('does not create .kimi-code/AGENTS.md when Kimi is not installed', async () => {
+    await fse.remove(path.join(homeDir, '.kimi-code'));
+    await fse.writeFile(teamRule('a'), 'rule A');
+
+    await handler.pullAllRules(teamConfig, localConfig);
+    expect(await fse.pathExists(path.join(homeDir, '.kimi-code'))).toBe(false);
+  });
+
+  it('inlines the rules into the project .kimi-code/AGENTS.md in project scope', async () => {
+    const projectRoot = path.join(tmpDir, 'project');
+    await fse.ensureDir(path.join(projectRoot, '.kimi-code'));
+    await fse.writeFile(teamRule('a'), 'rule A');
+    const projectConfig = { ...localConfig, scope: 'project', projectRoot } as unknown as LocalConfig;
+
+    await handler.pullAllRules(teamConfig, projectConfig);
+
+    const content = await fse.readFile(path.join(projectRoot, '.kimi-code', 'AGENTS.md'), 'utf8');
+    expect(content).toContain('<!-- [teamai:team-rules:start] -->');
+    expect(content).toContain('rule A');
+    expect(await fse.pathExists(path.join(projectRoot, '.kimi-code', 'rules'))).toBe(false);
+  });
+});
 describe('RulesHandler.pullAllRules — Hermes SOUL.md (#938)', () => {
   let tmpDir: string;
   let hermesHome: string;

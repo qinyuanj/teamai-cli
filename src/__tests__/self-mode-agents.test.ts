@@ -66,7 +66,7 @@ describe('detectHomeInstalledAgents', () => {
     await fse.ensureDir(path.join(home, '.codex'));
     await fse.ensureDir(path.join(home, '.claude'));
     const found = await detectHomeInstalledAgents();
-    // candidate order is claude, codex, cursor, copilot, pi, joycode, codebuddy, workbuddy, muse
+    // candidate order is claude, codex, cursor, copilot, pi, joycode, codebuddy, workbuddy, muse, kimi
     expect(found).toEqual(['claude', 'codex']);
   });
 
@@ -78,13 +78,18 @@ describe('detectHomeInstalledAgents', () => {
     expect(await detectHomeInstalledAgents()).toEqual(expected);
   });
 
+  it('detects Kimi Code CLI from its ~/.kimi-code home', async () => {
+    await fse.ensureDir(path.join(home, '.kimi-code'));
+    expect(await detectHomeInstalledAgents()).toEqual(['kimi']);
+  });
+
   it('respects a custom candidate list', async () => {
     await fse.ensureDir(path.join(home, '.cursor'));
     await fse.ensureDir(path.join(home, '.claude'));
     expect(await detectHomeInstalledAgents(['cursor'])).toEqual(['cursor']);
   });
 
-  it('SELF_MODE_AGENT_CHOICES includes Pi, Copilot, JoyCode and Muse Code among the common coding agents', () => {
+  it('SELF_MODE_AGENT_CHOICES includes Pi, Copilot, JoyCode, Muse Code and Kimi among the common coding agents', () => {
     expect([...SELF_MODE_AGENT_CHOICES]).toEqual([
       'claude',
       'codex',
@@ -95,6 +100,7 @@ describe('detectHomeInstalledAgents', () => {
       'codebuddy',
       'workbuddy',
       'muse',
+      'kimi',
     ]);
   });
 });

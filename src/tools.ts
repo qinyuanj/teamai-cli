@@ -103,7 +103,7 @@ export type RulesDir<R> = { readonly channel: 'dir'; readonly format: RuleFormat
 /** The team rules as one block in the tool's blocks file for the scope; `label` names that file in doctor. */
 export type RulesInline = { readonly channel: 'inline'; readonly label: string };
 
-export type RulesChannels = Scoped<RulesDir<HomeRead> | RulesInline, RulesDir<HomeRead | ProjectRead> | RunTime>;
+export type RulesChannels = Scoped<RulesDir<HomeRead> | RulesInline, RulesDir<HomeRead | ProjectRead> | RulesInline | RunTime>;
 
 /** Where a blocks file sits; `owned`: the whole file is teamai's. */
 export type BlocksFile = { readonly owned?: true; readonly header?: BlocksHeader } & (
@@ -183,7 +183,7 @@ export type HookFormat = 'claude' | 'cursor' | 'codex' | 'copilot' | 'zcode';
 export type HookSettings<R> = { readonly channel: 'settings'; readonly format: HookFormat; readonly reads: Reads<R> };
 
 /** A file or directory of teamai's own the tool loads from its home, written by the tool's own adapter. */
-export type HookAdapterId = 'opencode-plugin' | 'pi-extension' | 'omp-extension' | 'hermes-plugin' | 'openclaw-hook' | 'dsh-hooks' | 'kiro-hooks';
+export type HookAdapterId = 'opencode-plugin' | 'pi-extension' | 'omp-extension' | 'hermes-plugin' | 'openclaw-hook' | 'dsh-hooks' | 'kiro-hooks' | 'kimi-hooks';
 export type HookAdapter = { readonly channel: 'adapter'; readonly adapter: HookAdapterId; readonly evidence: Evidence };
 
 /**
@@ -1109,6 +1109,40 @@ export const TOOLS = {
       agentHooks: { cell: '✓t', note: '#1224 writes them to settings.json; not rerun' },
     },
   },
+  // Kimi Code CLI reads no rules directory, and its SessionStart hook cannot add
+  // context, so the team rules are a block in its own AGENTS.md in both scopes.
+  kimi: {
+    home: { dir: '.kimi-code', moves: { by: [{ kind: 'env', name: 'KIMI_CODE_HOME', evidence: 'docs' }] } },
+    skillLoad: 'unknown',
+    skills: {
+      user: [{ base: 'home', path: '.kimi-code/skills', evidence: 'docs' }],
+      project: [{ base: 'project', path: '.kimi-code/skills', when: 'cwdOnly', evidence: 'assumed' }],
+    },
+    rules: {
+      user: { channel: 'inline', label: 'Kimi Code AGENTS.md' },
+      project: { channel: 'inline', label: 'Kimi Code AGENTS.md' },
+    },
+    blocks: {
+      user: { channel: 'file', file: { in: 'claudemd' }, reads: [{ base: 'home', path: '.kimi-code/AGENTS.md', evidence: 'assumed' }] },
+      project: { channel: 'file', file: { in: 'claudemd' }, reads: [{ base: 'project', path: '.kimi-code/AGENTS.md', when: 'cwdOnly', evidence: 'assumed' }] },
+    },
+    agents: {
+      user: { reads: [{ base: 'home', path: '.kimi-code/agents', evidence: 'docs' }] },
+      project: { reads: [{ base: 'project', path: '.kimi-code/agents', when: 'cwdOnly', evidence: 'assumed' }] },
+    },
+    mcp: NONE,
+    hooks: { user: { channel: 'adapter', adapter: 'kimi-hooks', evidence: 'docs' }, self: 'user' },
+    sessions: 'unknown',
+    features: {
+      env: '?',
+      workflows: '?',
+      recall: '✓t',
+      stats: '?',
+      aiBackend: '?',
+      votesJudge: '?',
+      agentHooks: '?',
+    },
+  },
 } as const satisfies Record<ToolId, ToolDescriptor>;
 
 export function isToolId(value: string): value is ToolId {
@@ -1225,6 +1259,7 @@ export function runTimeRulesOf(tool: string): RunTimeVia | null {
   if (typeof project !== 'object') return null;
   switch (project.channel) {
     case 'dir':
+    case 'inline':
       return null;
     case 'session-hook':
     case 'extension':

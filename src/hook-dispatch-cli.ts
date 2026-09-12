@@ -33,6 +33,7 @@ import { claudeHookRunsInAnotherHost } from './claude-hook-host.js';
 import { claimCopilotHookEvent } from './copilot-hook-claim.js';
 import { launchedBy, SESSION_RUN_PAYLOAD_KEY, sessionRun } from './launch-context.js';
 import { isSelfMode } from './types.js';
+import { normalizeToolName } from './utils/tool-names.js';
 
 export { claudeHookRunsInAnotherHost };
 
@@ -434,6 +435,10 @@ export async function hookDispatchCli(
     setSilent(true);
     clearGitHookRepositoryEnv();
   }
+  // Hosts register the matcher in their own tool vocabulary (kimi: `TodoList`)
+  // while the handler registry keys on Claude-style names (`TodoWrite`), so
+  // route on the normalized name. Idempotent for names already in CLI form.
+  matcher = normalizeToolName(matcher);
   try {
     // Git sends no payload: its arguments and the checkout it runs in are the
     // payload. The detached child gets them back through the STDIN file.

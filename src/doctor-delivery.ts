@@ -1098,7 +1098,7 @@ async function buildProjectRulesHookChecks(ctx: DoctorContext): Promise<Check[]>
  */
 async function buildUserRulesFileChecks(ctx: DoctorContext, items: ResourceItem[]): Promise<Check[]> {
   const { localConfig, teamConfig } = ctx;
-  if (!teamConfig || localConfig.scope !== 'user') return [];
+  if (!teamConfig) return [];
 
   const { inlineRulesLabelOf, inlineRulesLocationOf, teamRulesBlock, unreadableConfigOf } = await import('./resources/rules.js');
   const { isCodexTool } = await import('./utils/tool-names.js');
@@ -1107,7 +1107,7 @@ async function buildUserRulesFileChecks(ctx: DoctorContext, items: ResourceItem[
   const install = installOf(teamConfig, localConfig);
   const checks: Check[] = [];
   for (const tool of Object.keys(install.toolPaths)) {
-    const label = inlineRulesLabelOf(tool);
+    const label = inlineRulesLabelOf(tool, install.scope);
     // Hermes keeps its rules in its own SOUL.md block.
     if (label === null || tool === 'hermes' || isAgentExcluded(localConfig, tool)) continue;
     const location = await inlineRulesLocationOf(tool, install);

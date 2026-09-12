@@ -332,7 +332,7 @@ function getPwshDispatchCommand(event: string, tool: string, matcher?: string): 
 
 /** Canonical, ordered description of each built-in hook. Order is load-bearing
  *  for byte-compat (it fixes array order within each event). */
-interface BuiltinHookSpec {
+export interface BuiltinHookSpec {
   /** description keyword (stable identity / HookDef.key). */
   key: string;
   /** Claude PascalCase event. */
@@ -345,7 +345,7 @@ interface BuiltinHookSpec {
   timeoutSec: number;
 }
 
-const BUILTIN_HOOK_SPECS: BuiltinHookSpec[] = [
+export const BUILTIN_HOOK_SPECS: readonly BuiltinHookSpec[] = [
   { key: 'Hook dispatch session-start', event: 'SessionStart', dispatchEvent: 'session-start', matcher: '*', timeoutSec: 15 },
   { key: 'Hook dispatch stop', event: 'Stop', dispatchEvent: 'stop', matcher: '*', timeoutSec: 15 },
   { key: 'Hook dispatch post-tool-use wildcard', event: 'PostToolUse', dispatchEvent: 'post-tool-use', matcher: '*', timeoutSec: 10 },

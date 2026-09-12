@@ -71,11 +71,11 @@ describe('promptForSelfModeAgents — interactive Auto option', () => {
     expect(result).toEqual(['cursor']);
   });
 
-  it('offers exactly 10 options (Auto + 9 tools)', async () => {
+  it('offers exactly 11 options (Auto + 10 tools)', async () => {
     vi.mocked(askSelection).mockResolvedValueOnce([0]);
     await promptForSelfModeAgents({});
     const [, itemCount] = vi.mocked(askSelection).mock.calls[0];
-    expect(itemCount).toBe(10);
+    expect(itemCount).toBe(11);
   });
 
   it('offers Muse Code with its ~/.config/muse root', async () => {
