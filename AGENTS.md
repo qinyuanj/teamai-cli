@@ -31,7 +31,7 @@ Iterate with `npm run test:e2e -- <test-file>`; run the full suite only when cha
 Do not cover the full provider × agent matrix below. Leave extra providers and agents to CI, or say so when the local environment cannot run them:
 
 - Agents: Claude, Codex, CodeBuddy, OpenCode
-- Providers: `git`, `gitlab`, `github`
+- Providers: `git`, `gitlab`, `github`, `gitea`
 
 ## Self review before push
 

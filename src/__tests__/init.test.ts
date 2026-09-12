@@ -13,6 +13,7 @@ const mockGit = {
   push: vi.fn(),
   revparse: vi.fn().mockResolvedValue('main'),
   raw: vi.fn(),
+  getConfig: vi.fn().mockResolvedValue({ value: 'tester' }),
   outputHandler: vi.fn().mockReturnThis(),
 };
 
@@ -724,7 +725,7 @@ describe('init', () => {
   });
 
   /** Init against a clone whose teamai.yaml loads, so the stub deploy runs. */
-  async function initWithTeamConfig(): Promise<void> {
+  async function initWithTeamConfig(answers = ['n', '1']): Promise<void> {
     let cloneDone = false;
     pathExistsFn = (p: string) => (p === localPath ? cloneDone : false);
     mockGfRepoClone.mockImplementation(() => {
@@ -743,7 +744,7 @@ describe('init', () => {
       },
       toolPaths: {},
     } as never);
-    questionAnswers = ['n', '1'];
+    questionAnswers = answers;
     await init({ repo: 'https://git.woa.com/HyperAI/teamai-test.git', scope: 'user' });
   }
 
@@ -1047,6 +1048,27 @@ describe('init', () => {
         'project',
         process.cwd(),
       );
+    });
+  });
+
+  describe('member registration without a git identity', () => {
+    it('skips registration with the fix and still finishes the local setup', async () => {
+      const reports = await import('../utils/reports-branch.js');
+      const update = vi.spyOn(reports, 'updateReports');
+      mockGit.getConfig.mockResolvedValue({ value: null });
+      try {
+        // No reviewer prompt without an identity: the only answer is the role.
+        await initWithTeamConfig(['1']);
+        expect(update).not.toHaveBeenCalled();
+        expect(mockExit).not.toHaveBeenCalled();
+        const { log } = await import('../utils/logger.js');
+        expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('git user.name / user.email are not set'));
+        expect(log.info).toHaveBeenCalledWith(expect.stringContaining('git config --global user.email'));
+        expect(log.success).toHaveBeenCalledWith('teamai initialized successfully!');
+      } finally {
+        update.mockRestore();
+        mockGit.getConfig.mockResolvedValue({ value: 'tester' });
+      }
     });
   });
 
@@ -1501,7 +1523,7 @@ describe('init --provider', () => {
 
   it('rejects an unknown provider and names the valid ones', () => {
     expect(() => resolveInitProvider('GitLab')).toThrow(
-      'Invalid --provider "GitLab". Use one of: tgit, github, cnb, gitlab, gitcode, git, '
+      'Invalid --provider "GitLab". Use one of: tgit, github, cnb, gitlab, gitcode, gitea, git, '
       + 'or omit --provider to detect it from the repo URL.',
     );
   });
