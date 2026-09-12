@@ -220,3 +220,12 @@ teamai models remove local:my-gateway
 ## ZCode hook stdout budget
 
 Doctor measures the serialized project-rules reply in UTF-8 bytes against `hooks.maxOutputBytes` in `~/.zcode/cli/config.json` (32768 by default). This is a lower bound: other session hints add bytes to the complete reply. ZCode truncates oversized stdout and silently drops a reply that no longer parses, even when its hook is registered. Shorten the rules or increase that positive integer limit enough for the complete reply, then start a new ZCode session. TeamAI does not change the limit or truncate rules.
+
+## Kimi Code CLI
+
+Kimi Code CLI is a built-in target (`--agent kimi`), detected from `~/.kimi-code` (or `$KIMI_CODE_HOME`).
+
+- **Skills** go to `.kimi-code/skills/` and **subagents** to `.kimi-code/agents/*.md`, in Kimi's Markdown format: `name`, `description` and a `tools` allowlist. Claude tool names are translated to Kimi's (`Task` becomes `Agent`); `model` is not written. Kimi-only fields (`whenToUse`, `disallowedTools`, `subagents`, `override`) round-trip through `tool_extras.kimi`.
+- **Rules**: Kimi reads no rules directory, and its `SessionStart` hook cannot add context, so the team rules are a teamai-managed block in `.kimi-code/AGENTS.md`, in user and workspace scope alike. Path-scoped rules apply to every task there. Your own content outside the block is kept; the block goes when the team's last rule does.
+- **Culture, shared instructions and the recall block** go to the same `AGENTS.md`.
+- **Hooks** are `[[hooks]]` entries in the user-level `~/.kimi-code/config.toml`, whatever the scope. When that directory does not exist yet, pull skips them, warning when `kimi` is enabled: run Kimi Code once, then `teamai pull`. `teamai doctor` checks that `config.toml` carries the teamai entries.

@@ -45,7 +45,7 @@ const BEFORE: {
   },
   agentTools: [
     'claude', 'claude-internal', 'tclaude', 'codebuddy', 'codex', 'codex-internal', 'tcodex', 'cursor', 'copilot', 'joycode',
-    'qoder', 'qoder-cn', 'kiro', 'zcode', 'omp', 'opencode', 'workbuddy', 'muse',
+    'qoder', 'qoder-cn', 'kiro', 'zcode', 'omp', 'opencode', 'workbuddy', 'muse', 'kimi',
   ],
 };
 

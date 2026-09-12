@@ -220,3 +220,12 @@ teamai models remove local:my-gateway
 ## ZCode hook stdout 容量
 
 Doctor 会按 UTF-8 字节计算项目规则回复序列化后的大小，并与 `~/.zcode/cli/config.json` 中的 `hooks.maxOutputBytes`（默认 32768）比较。这只是大小下界：其他会话提示还会增加完整回复的字节数。即使 hook 已注册，ZCode 仍会截断超限的标准输出，并静默丢弃截断后无法解析的回复。请缩短规则，或将该正整数上限增大到足以容纳完整回复，再启动新的 ZCode 会话。TeamAI 不会自行修改上限或截断规则。
+
+## Kimi Code CLI
+
+Kimi Code CLI 是内置目标（`--agent kimi`），通过 `~/.kimi-code`（或 `$KIMI_CODE_HOME`）检测。
+
+- **Skills** 写入 `.kimi-code/skills/`，**子代理**写入 `.kimi-code/agents/*.md`，采用 Kimi 的 Markdown 格式：`name`、`description` 和 `tools` 白名单。Claude 的工具名会转换为 Kimi 的名字（`Task` 转为 `Agent`），不写 `model`。Kimi 专有字段（`whenToUse`、`disallowedTools`、`subagents`、`override`）经 `tool_extras.kimi` 往返保留。
+- **Rules**：Kimi 不读取 rules 目录，其 `SessionStart` hook 也无法注入上下文，所以团队规则在用户级和工作区级都写成 `.kimi-code/AGENTS.md` 里由 teamai 管理的块。带路径范围的规则在那里对所有任务生效。块以外你自己的内容会保留；团队删掉最后一条规则时，块随之删除。
+- **团队文化、共享指令和 recall 块**写入同一个 `AGENTS.md`。
+- **Hooks** 无论哪个 scope，都写成用户级 `~/.kimi-code/config.toml` 中的 `[[hooks]]` 条目。该目录还不存在时 pull 会跳过；启用了 `kimi` 时会给出警告：先运行一次 Kimi Code，再执行 `teamai pull`。`teamai doctor` 会检查 `config.toml` 中是否有 teamai 的条目。

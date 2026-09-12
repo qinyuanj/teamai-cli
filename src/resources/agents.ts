@@ -38,6 +38,7 @@ import {
   reverseFromMuse,
   reverseFromOpencode,
   reverseFromWorkbuddy,
+  reverseFromKimi,
   mergeReverseResults,
   agentEffortField,
   toolExtrasFor,
@@ -1856,5 +1857,7 @@ function reverseByParser(tool: ToolName, filePath: string, content: string): Rev
       return reverseFromWorkbuddy(filePath, content);
     case 'muse':
       return reverseFromMuse(filePath, content);
+    case 'kimi':
+      return reverseFromKimi(filePath, content);
   }
 }

@@ -41,6 +41,7 @@ team:
 | DeepSeek Harness | `$DSH_HOME/AGENTS.md`（未设置时 `~/.dsh/AGENTS.md`） | session-start hook |
 | JoyCode | `~/.joycode/rules.txt` | 无 |
 | Muse Code | `~/.config/muse/AGENTS.md` | session-start hook |
+| Kimi Code CLI | `$KIMI_CODE_HOME/AGENTS.md`（未设置时 `~/.kimi-code/AGENTS.md`） | `.kimi-code/AGENTS.md` |
 
 ## 查看效果
 

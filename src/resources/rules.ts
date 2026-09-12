@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { ResourceHandler, type PlacementRecords } from './base.js';
-import type { CopyOrigin, ResourceItem, ResourceItemStatus, DeliveryTarget, TeamaiConfig, LocalConfig } from '../types.js';
+import type { CopyOrigin, ResourceItem, ResourceItemStatus, DeliveryTarget, TeamaiConfig, LocalConfig, Scope } from '../types.js';
 import { listFilesRecursive, pathExists, copyFile, ensureDir, remove, fileContentEqual, getFileMtime, listDirs, readFileSafe, writeFile, pruneEmptyDirs, fileHash } from '../utils/fs.js';
 import { log } from '../utils/logger.js';
 import { getUserHome } from '../utils/home.js';
@@ -992,17 +992,16 @@ export class RulesHandler extends ResourceHandler {
     /** Gets each tool whose team-rules block was not written. */
     toolsMissingRules?: Set<string>,
   ): Promise<void> {
+    const install = installOf(teamConfig, localConfig);
     if (localConfig.scope !== 'user') {
       await this.removeStaleProjectSoulRules(localConfig);
-      return;
-    }
+    } else {
     // Hermes: inline all team rules into a teamai-managed block in SOUL.md
     // (user-level standing instructions). Only when Hermes is actually
     // installed — never create ~/.hermes for users who don't use it. SOUL.md
     // is global, so only a user-scope pull writes it; Hermes gets no project
     // rules (see `ruleChannelNotes`, #946). Here, so the "Already synced" pull
     // repairs a block an older project pull overwrote.
-    const install = installOf(teamConfig, localConfig);
     const soul = await inlineRulesLocationOf('hermes', install);
     if (soul !== null && writable(soul) !== null) {
       const { getHermesSoulPath, upsertSoulRules } = await import('../hermes-config.js');
@@ -1014,6 +1013,8 @@ export class RulesHandler extends ResourceHandler {
           + 'file as it is until this succeeds; run `teamai pull` again once the cause above is fixed.');
       }
     }
+    }
+    // Kimi Code takes the block in a project too (tools.ts).
     const block = await teamRulesBlock(rules);
     for (const tool of Object.keys(install.toolPaths)) {
       // SOUL.md holds Hermes' rules in its own block, above.
@@ -1409,9 +1410,9 @@ function rulesDirOf(location: Location<'rules'>): string | null {
   return own?.kind === 'dir' ? own.path : null;
 }
 
-/** How doctor names the file `tool` reads the team rules from in user scope, inlined there; null for a tool that reads rule files. */
-export function inlineRulesLabelOf(tool: string): string | null {
-  const channel = channelsOf(tool).rules.user;
+/** How doctor names the file `tool` reads the team rules from in `scope`, inlined there; null for a tool that reads rule files. */
+export function inlineRulesLabelOf(tool: string, scope: Scope = 'user'): string | null {
+  const channel = channelsOf(tool).rules[scope];
   return typeof channel === 'object' && channel.channel === 'inline' ? channel.label : null;
 }
 
@@ -1422,7 +1423,7 @@ export function inlineRulesLabelOf(tool: string): string | null {
  * reads rule files.
  */
 export async function inlineRulesLocationOf(tool: string, install: Install): Promise<Location<'blocks'> | null> {
-  return install.scope === 'user' && inlineRulesLabelOf(tool) !== null ? locate(tool, 'blocks', install) : null;
+  return inlineRulesLabelOf(tool, install.scope) !== null ? locate(tool, 'blocks', install) : null;
 }
 
 /** The `readable-config` gate `location` does not meet: teamai cannot read the config that names the tool's rules file. */

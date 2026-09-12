@@ -102,7 +102,7 @@ export type RulesDir<R> = { readonly channel: 'dir'; readonly format: RuleFormat
 /** The team rules as one block in the tool's blocks file for the scope; `label` names that file in doctor. */
 export type RulesInline = { readonly channel: 'inline'; readonly label: string };
 
-export type RulesChannels = Scoped<RulesDir<HomeRead> | RulesInline, RulesDir<HomeRead | ProjectRead> | RunTime>;
+export type RulesChannels = Scoped<RulesDir<HomeRead> | RulesInline, RulesDir<HomeRead | ProjectRead> | RulesInline | RunTime>;
 
 /** Where a blocks file sits; `owned`: the whole file is teamai's. */
 export type BlocksFile = { readonly owned?: true; readonly header?: BlocksHeader } & (
@@ -775,6 +775,29 @@ export const TOOLS = {
       project: { format: 'muse', writtenBy: 'claude', reads: [{ base: 'project', path: '.mcp.json', when: 'workspaceUnder', evidence: 'source' }] },
     },
   },
+  // Kimi Code CLI reads no rules directory, and its SessionStart hook cannot add
+  // context, so the team rules are a block in its own AGENTS.md in both scopes.
+  kimi: {
+    home: { dir: '.kimi-code', moves: { by: [{ kind: 'env', name: 'KIMI_CODE_HOME', evidence: 'docs' }] } },
+    skillLoad: 'unknown',
+    skills: {
+      user: [{ base: 'home', path: '.kimi-code/skills', evidence: 'docs' }],
+      project: [{ base: 'project', path: '.kimi-code/skills', when: 'cwdOnly', evidence: 'assumed' }],
+    },
+    rules: {
+      user: { channel: 'inline', label: 'Kimi Code AGENTS.md' },
+      project: { channel: 'inline', label: 'Kimi Code AGENTS.md' },
+    },
+    blocks: {
+      user: { channel: 'file', file: { in: 'claudemd' }, reads: [{ base: 'home', path: '.kimi-code/AGENTS.md', evidence: 'assumed' }] },
+      project: { channel: 'file', file: { in: 'claudemd' }, reads: [{ base: 'project', path: '.kimi-code/AGENTS.md', when: 'cwdOnly', evidence: 'assumed' }] },
+    },
+    agents: {
+      user: { reads: [{ base: 'home', path: '.kimi-code/agents', evidence: 'docs' }] },
+      project: { reads: [{ base: 'project', path: '.kimi-code/agents', when: 'cwdOnly', evidence: 'assumed' }] },
+    },
+    mcp: NONE,
+  },
 } as const satisfies Record<ToolId, ToolDescriptor>;
 
 export function isToolId(value: string): value is ToolId {
@@ -877,6 +900,7 @@ export function runTimeRulesOf(tool: string): RunTimeVia | null {
   if (typeof project !== 'object') return null;
   switch (project.channel) {
     case 'dir':
+    case 'inline':
       return null;
     case 'session-hook':
     case 'extension':
