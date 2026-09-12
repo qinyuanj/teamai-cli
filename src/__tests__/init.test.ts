@@ -561,7 +561,6 @@ describe('init', () => {
           reviewers: [],
           sharing: {
             skills: {},
-            rules: { enforced: [] },
             docs: { localDir: '~/.teamai/docs' },
             env: { injectShellProfile: true },
           },
@@ -574,7 +573,6 @@ describe('init', () => {
           reviewers: [],
           sharing: {
             skills: {},
-            rules: { enforced: [] },
             docs: { localDir: '~/.teamai/docs' },
             env: { injectShellProfile: true },
           },
@@ -613,7 +611,6 @@ describe('init', () => {
           reviewers: [],
           sharing: {
             skills: {},
-            rules: { enforced: [] },
             docs: { localDir: '~/.teamai/docs' },
             env: { injectShellProfile: true },
           },
@@ -626,7 +623,6 @@ describe('init', () => {
           reviewers: [],
           sharing: {
             skills: {},
-            rules: { enforced: [] },
             docs: { localDir: '~/.teamai/docs' },
             env: { injectShellProfile: true },
           },
@@ -655,7 +651,7 @@ describe('init', () => {
         repo: 'https://git.woa.com/HyperAI/teamai-test.git',
         provider: 'tgit',
         reviewers: [],
-        sharing: { rules: { enforced: [] }, docs: {}, env: { injectShellProfile: true } },
+        sharing: { docs: {}, env: { injectShellProfile: true } },
         toolPaths: {},
       } as never);
       mockLoadProjectsManifest.mockResolvedValueOnce({
@@ -696,7 +692,7 @@ describe('init', () => {
         repo: 'https://git.woa.com/HyperAI/teamai-test.git',
         provider: 'tgit',
         reviewers: [],
-        sharing: { rules: { enforced: [] }, docs: {}, env: { injectShellProfile: true } },
+        sharing: { docs: {}, env: { injectShellProfile: true } },
         toolPaths: {},
       } as never);
       mockLoadProjectsManifest.mockResolvedValueOnce({
@@ -738,7 +734,6 @@ describe('init', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '~/.teamai/docs' },
         env: { injectShellProfile: true },
       },
@@ -840,7 +835,7 @@ describe('init', () => {
         repo: 'https://git.woa.com/HyperAI/teamai-test.git',
         provider: 'tgit',
         reviewers: [],
-        sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '~/.teamai/docs' }, env: { injectShellProfile: true } },
+        sharing: { skills: {}, docs: { localDir: '~/.teamai/docs' }, env: { injectShellProfile: true } },
         toolPaths: { codex: toolPaths.codex, claude: toolPaths.claude },
       } as never);
       questionAnswers = ['n', '1'];
@@ -1034,7 +1029,7 @@ describe('init', () => {
         provider: 'tgit',
         scope: 'user',
         reviewers: [],
-        sharing: { rules: { enforced: [] }, docs: {}, env: { injectShellProfile: true } },
+        sharing: { docs: {}, env: { injectShellProfile: true } },
         toolPaths: {},
       } as never);
 
@@ -1087,7 +1082,7 @@ describe('init', () => {
           mockGit.raw.mockResolvedValue('https://git.example.com/group/repo.git\n');
           vi.mocked(await import('../config.js')).loadTeamConfig.mockResolvedValue({
             team: 'repo', repo: 'https://git.example.com/group/repo.git', provider: 'git',
-            reviewers: [], sharing: { rules: { enforced: [] }, docs: {}, env: {} }, toolPaths: {},
+            reviewers: [], sharing: { docs: {}, env: {} }, toolPaths: {},
           } as never);
           await init({ repo: '.', role: 'hai', agent: 'claude', force: true });
         }
@@ -1147,7 +1142,7 @@ describe('init', () => {
         repo: 'http://git.example.com/group/repo.git',
         provider: 'git',
         reviewers: [],
-        sharing: { rules: { enforced: [] }, docs: {}, env: { injectShellProfile: true } },
+        sharing: { docs: {}, env: { injectShellProfile: true } },
         toolPaths: {},
       } as never);
 
@@ -1477,7 +1472,7 @@ describe('init --provider', () => {
     repo: GITLAB_REPO,
     provider: 'gitlab',
     reviewers: [],
-    sharing: { rules: { enforced: [] }, docs: {}, env: { injectShellProfile: true } },
+    sharing: { docs: {}, env: { injectShellProfile: true } },
     toolPaths: {},
   } as never;
   // What an unconfigured self-hosted GitLab answers to init's probe.
@@ -1665,7 +1660,7 @@ describe('init --provider', () => {
       repo: GITLAB_REPO,
       provider: 'gitlab',
       reviewers: [],
-      sharing: { rules: { enforced: [] }, docs: {}, env: { injectShellProfile: true } },
+      sharing: { docs: {}, env: { injectShellProfile: true } },
       toolPaths: {},
     } as never);
 

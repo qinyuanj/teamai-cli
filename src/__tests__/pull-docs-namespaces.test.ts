@@ -133,7 +133,6 @@ describe('pull: docs by namespace', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '~/team-docs' },
         env: { injectShellProfile: true },
       },

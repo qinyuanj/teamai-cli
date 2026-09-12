@@ -27,7 +27,7 @@ describe('team secret values', () => {
 
   const teamConfig: TeamaiConfig = {
     team: 'acme', description: '', repo: 'https://example.com/acme/team.git', provider: 'git', reviewers: [],
-    sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: false } },
+    sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: false } },
     toolPaths: {},
   };
   const variable = (key: string, value: string): EnvVariable => ({ key, value });

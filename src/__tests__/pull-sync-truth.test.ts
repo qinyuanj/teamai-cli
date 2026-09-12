@@ -124,7 +124,6 @@ describe('pull reports what reached the tool directory (#585)', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: 'docs' },
         env: { injectShellProfile: true },
       },

@@ -40,7 +40,7 @@ async function team(workflows: Record<string, string>, tools: TeamaiConfig['tool
   const localConfig: LocalConfig = { repo: { localPath: repo, remote: 'local' }, username: 'test', scope: 'user', additionalRoles: [], dataHome: path.join(root, 'data') };
   const teamConfig: TeamaiConfig = {
     team: 'test', description: '', repo: 'local', provider: 'git', reviewers: [],
-    sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+    sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
     toolPaths: tools,
   };
   await syncWorkflowDefinitions(localConfig);

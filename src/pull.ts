@@ -34,6 +34,7 @@ import { installOf, locate, ownOf, SHARED_AGENT_SKILLS_PATH, writable, writesOf 
 import { describeToolHomeChange, recordToolHomes } from './tool-home-record.js';
 import { describeInvalidToolHomes, realHost } from './tool-home.js';
 import { placesOf, placesRecordOf, placesUnmoved, recordPlaces, type PlacesRecord, type SessionToolHomes } from './resources/places.js';
+import { findDuplicateSkillNames, reportDuplicateSkills } from './resources/skill-duplicates.js';
 import { flatStemsOfRemoved, ruleFileExtensionForTool, ruleFormatForTool, ruleStemsForTool } from './resources/rule-format.js';
 import { AGENT_FILE_EXTENSIONS } from './resources/agent-format.js';
 import {
@@ -2157,13 +2158,22 @@ async function pullForScope(
         if (result) { result.resourceSyncFailed = true; result.delivery = 'failed'; }
         continue;
       }
-      items = desired.items;
+      const overriddenNames = new Set(desired.overrides.map((o) => o.name));
+      const rootNames = new Set(desired.teamItems.filter((item) => !item.namespace).map((item) => item.name));
+      const activeSkillNamespaces = roleContext?.activeNamespaces.skills ?? [];
+      const candidates = desired.teamItems.filter((item) => !overriddenNames.has(item.name)
+        && !(roleContext && item.namespace && rootNames.has(item.name) && !activeSkillNamespaces.includes(item.namespace)));
+      const duplicates = findDuplicateSkillNames(candidates);
+      const ambiguous = new Set(duplicates.map((d) => d.name));
+      reportDuplicateSkills(duplicates, `[${scopeLabel}] `);
+      items = desired.items.filter((item) => !ambiguous.has(item.name));
       skippedByTags = desired.skippedByTags;
       // A skill a workspace holds back keeps its installed copy (#913).
       desiredSkillNames = new Set([...items.map((i) => i.name), ...desired.held]);
       workspaceHeldSkills = desired.held.length > 0;
-      knownRepoSkillNames = new Set(desired.teamItems.map((i) => i.name));
-      knownRepoSkillSources = new Map(desired.teamItems.map((i) => [i.name, [i.sourcePath]]));
+      // An ambiguous name is never swept: no single team copy proves a copy unedited.
+      knownRepoSkillNames = new Set(desired.teamItems.filter((item) => !ambiguous.has(item.name)).map((i) => i.name));
+      knownRepoSkillSources = new Map(desired.teamItems.filter((item) => !ambiguous.has(item.name)).map((i) => [i.name, [i.sourcePath]]));
       // A workspace's copy may come from any member's source of the name (#913).
       for (const [name, sources] of desired.memberSources) {
         knownRepoSkillSources.set(name, [...new Set([...knownRepoSkillSources.get(name) ?? [], ...sources])]);

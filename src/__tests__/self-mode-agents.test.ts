@@ -127,7 +127,7 @@ describe('seedSelfModeToolDirs (no hardcoded claude default)', () => {
     await fse.ensureDir(repoRoot);
     teamConfig = {
       team: 't', description: '', repo: 'r', provider: 'github' as const, reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {
         claude: { skills: '.claude/skills' },
         codex: { skills: '.codex/skills' },

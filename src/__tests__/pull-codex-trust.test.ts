@@ -132,7 +132,7 @@ describe('pull trusts the Codex project after writing its MCP servers', () => {
       repo: 'owner/repo',
       provider: 'github',
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: { codex: { skills: '.codex/skills', settings: '.codex/hooks.json', mcp: '.codex/config.toml' } },
     } as unknown as TeamaiConfig;
     vi.mocked(detectProjectConfig).mockResolvedValue(localConfig);

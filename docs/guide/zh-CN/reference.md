@@ -20,7 +20,6 @@ description: 团队 AI 资源仓库
 repo: https://github.com/your-org/your-repo.git
 provider: github
 # language: en                # 可选。en 只用英文。省略或 zh 保持中英双语的 recall 规则、TodoWrite 提示和已合入 MR 提示
-# scope: 若存在则忽略。本机安装位置由 teamai init --scope 决定
 
 reviewers:
   - reviewer1
@@ -31,8 +30,6 @@ packages:
       version: "*"
 
 sharing:
-  rules:
-    enforced: [code-review-guide]
   recall:
     enabled: false
   docs:
@@ -58,6 +55,8 @@ sharing:
         retries: 3
 
 ```
+
+本版本 CLI 不认识的 `teamai.yaml` 键会被忽略，旧键或拼错的键都不会导致加载失败；`teamai doctor` 会以警告列出它们。
 
 ### config.yaml（本地配置）
 

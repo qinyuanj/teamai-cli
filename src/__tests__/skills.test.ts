@@ -77,7 +77,7 @@ describe('SkillsHandler.scanLocalForPush', () => {
       repo: 'https://git.woa.com/test/repo.git',
       provider: 'tgit' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {
         claude: { skills: '.claude/skills', rules: '.claude/rules' },
       },
@@ -803,6 +803,107 @@ scope: 'user',
   });
 });
 
+describe('SkillsHandler.scanLocalForPush with duplicate team skill names', () => {
+  let tmpDir: string;
+  let homeDir: string;
+  let repoPath: string;
+  let handler: SkillsHandler;
+  let teamConfig: TeamaiConfig;
+  let localConfig: LocalConfig;
+
+  async function writeSkill(root: string, rel: string, body: string): Promise<void> {
+    await fse.ensureDir(path.join(root, rel));
+    await fse.writeFile(path.join(root, rel, 'SKILL.md'), body);
+  }
+
+  beforeEach(async () => {
+    const { resetReportedDuplicateSkills } = await import('../resources/skill-duplicates.js');
+    resetReportedDuplicateSkills();
+    vi.mocked(log.error).mockClear();
+    process.exitCode = undefined;
+    tmpDir = await fse.mkdtemp(path.join(os.tmpdir(), 'teamai-skills-dup-push-'));
+    homeDir = path.join(tmpDir, 'home');
+    repoPath = path.join(tmpDir, 'team-repo');
+    await fse.ensureDir(path.join(repoPath, 'skills'));
+    await fse.ensureDir(path.join(homeDir, '.claude', 'skills'));
+    vi.stubEnv('HOME', homeDir);
+    handler = new SkillsHandler();
+    teamConfig = {
+      team: 'test',
+      description: '',
+      repo: 'https://git.woa.com/test/repo.git',
+      provider: 'tgit' as const,
+      reviewers: [],
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      toolPaths: { claude: { skills: '.claude/skills', rules: '.claude/rules' } },
+    };
+    localConfig = {
+      repo: { localPath: repoPath, remote: 'https://git.woa.com/test/repo.git' },
+      username: 'testuser',
+      updatePolicy: 'auto',
+      additionalRoles: [],
+      scope: 'user',
+    };
+  });
+
+  afterEach(async () => {
+    vi.unstubAllEnvs();
+    await fse.remove(tmpDir);
+  });
+
+  it('attributes the edit to the allowed-namespace skill that replaces the top-level one (#707)', async () => {
+    // Since #707 an active namespace skill replaces the root skill of its
+    // name: pull delivers skills/hai/x and withdraws skills/x, so the member's
+    // edited copy is hai's and the name is not ambiguous.
+    await fse.ensureDir(path.join(repoPath, 'manifest'));
+    await fse.writeFile(path.join(repoPath, 'manifest', 'roles.yaml'), [
+      'version: 1',
+      'roles:',
+      '  - id: hai',
+      '    name: HAI',
+      '    resources:',
+      '      knowledge: [hai]',
+      '      skills: [hai]',
+      '      learnings: [hai]',
+      '',
+    ].join('\n'));
+    await writeSkill(repoPath, 'skills/x', '# Top');
+    await writeSkill(repoPath, 'skills/hai/x', '# From hai');
+    await writeSkill(homeDir, '.claude/skills/x', '# From hai, edited');
+
+    const items = await handler.scanLocalForPush(teamConfig, { ...localConfig, primaryRole: 'hai' });
+    const item = items.find((i) => i.name === 'x');
+    expect(item?.status).toBe('modified');
+    expect(item?.namespace).toBe('hai');
+    expect(item?.relativePath).toBe('skills/hai/x');
+    expect(process.exitCode).not.toBe(1);
+
+    for (const pushed of items) await handler.pushItem(pushed, teamConfig, { ...localConfig, primaryRole: 'hai' });
+    expect(await fse.readFile(path.join(repoPath, 'skills', 'hai', 'x', 'SKILL.md'), 'utf8')).toContain('# From hai, edited');
+    expect(await fse.readFile(path.join(repoPath, 'skills', 'x', 'SKILL.md'), 'utf8')).toBe('# Top');
+  });
+
+  it('does not block unrelated skills when the ambiguous skill has no local copy', async () => {
+    await writeSkill(repoPath, 'skills/a/x', '# From a');
+    await writeSkill(repoPath, 'skills/b/x', '# From b');
+    await writeSkill(homeDir, '.claude/skills/fresh', '# Fresh');
+
+    const items = await handler.scanLocalForPush(teamConfig, localConfig);
+    expect(items.map((i) => i.name)).toEqual(['fresh']);
+    expect(process.exitCode).toBeUndefined();
+    expect(vi.mocked(log.error)).not.toHaveBeenCalled();
+  });
+
+  it('offers no phantom modified skill once the conflict is renamed away', async () => {
+    await writeSkill(repoPath, 'skills/a/x', '# From a');
+    await writeSkill(repoPath, 'skills/b/x-b', '# From b');
+    await writeSkill(homeDir, '.claude/skills/x', '# From a');
+    await writeSkill(homeDir, '.claude/skills/x-b', '# From b');
+
+    expect(await handler.scanLocalForPush(teamConfig, localConfig)).toEqual([]);
+  });
+});
+
 describe('SkillsHandler.pushItem', () => {
   let tmpDir: string;
   let homeDir: string;
@@ -828,7 +929,7 @@ describe('SkillsHandler.pushItem', () => {
       repo: 'https://git.woa.com/test/repo.git',
       provider: 'tgit' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {
         claude: { skills: '.claude/skills', rules: '.claude/rules' },
       },
@@ -1353,7 +1454,7 @@ describe('ensureSkillFrontmatter', () => {
       repo: 'https://git.woa.com/test/repo.git',
       provider: 'tgit' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: { claude: { skills: '.claude/skills', rules: '.claude/rules' } },
     };
     const localConfig: LocalConfig = {
@@ -1452,7 +1553,7 @@ describe('SkillsHandler.pullItem honors disabledAgents', () => {
       repo: 'https://git.woa.com/test/repo.git',
       provider: 'tgit' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {
         claude: { skills: '.claude/skills', rules: '.claude/rules' },
         codex: { skills: '.codex/skills', rules: '.codex/rules' },
@@ -1512,7 +1613,7 @@ describe('SkillsHandler.pullItem through a skills directory that links away', ()
       repo: 'https://git.woa.com/test/repo.git',
       provider: 'tgit' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: { claude: { skills: '.claude/skills' } },
     };
     localConfig = {
@@ -1574,7 +1675,7 @@ describe('SkillsHandler.pullItem skips hermes when not installed', () => {
       repo: 'https://git.woa.com/test/repo.git',
       provider: 'tgit' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {
         hermes: { skills: '.hermes/skills' },
       },
@@ -1697,7 +1798,7 @@ describe('SkillsHandler.pullItem Codex shared skills', () => {
       repo: 'https://example.test/team.git',
       provider: 'git' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: { codex: { skills: '.codex/skills' } },
     };
     const localConfig = {
@@ -1742,7 +1843,7 @@ describe('SkillsHandler.pullItem Codex shared skills', () => {
       name: 'team-skill', type: 'skills', sourcePath, relativePath: 'skills/team-skill',
     }, {
       team: 'test', description: '', repo: 'https://example.test/team.git', provider: 'git', reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: { codex: { skills: '.codex/skills' } },
     }, {
       repo: { localPath: path.join(tmpDir, 'team-repo'), remote: 'https://example.test/team.git' },
@@ -1776,7 +1877,7 @@ describe('SkillsHandler.pullItem Codex shared skills', () => {
 
     const teamConfig: TeamaiConfig = {
       team: 'test', description: '', repo: 'https://example.test/team.git', provider: 'git', reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: { codex: { skills: '.codex/skills' }, muse: { skills: '.agents/skills' } },
     };
     const localConfig: LocalConfig = {
@@ -1812,7 +1913,7 @@ describe('SkillsHandler.pullItem Codex shared skills', () => {
       name: 'team-skill', type: 'skills', sourcePath, relativePath: 'skills/team-skill',
     }, {
       team: 'test', description: '', repo: 'https://example.test/team.git', provider: 'git', reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: { codex: { skills: '.codex/skills' }, muse: { skills: '.agents/skills' } },
     }, {
       repo: { localPath: repoPath, remote: 'https://example.test/team.git' },

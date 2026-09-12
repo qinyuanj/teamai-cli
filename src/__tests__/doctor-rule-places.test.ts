@@ -74,7 +74,7 @@ describe('doctor — where a tool takes rules and instruction blocks', () => {
     localConfig = { repo: { localPath: repoPath, remote: 'owner/repo' }, username: 'tester', scope: 'user', additionalRoles: [] };
     teamConfig = {
       team: 'test', description: '', repo: 'owner/repo', provider: 'git', reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: false } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: false } },
       toolPaths: { opencode: { rules: '.config/opencode/rules', userScope: { rules: '.config/opencode/rules' } } },
     };
     vi.mocked(loadLocalConfig).mockResolvedValue(localConfig);

@@ -137,7 +137,7 @@ describe('pull advisories for team secrets', () => {
       provider: 'github',
       reviewers: [],
       sharing: {
-        skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: false },
+        skills: {}, docs: { localDir: '' }, env: { injectShellProfile: false },
       },
       toolPaths: { claude: { skills: '.claude/skills', mcp: '.claude.json' } },
     };

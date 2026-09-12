@@ -49,7 +49,7 @@ describe('source physical destination ownership', () => {
     };
     team = {
       team: 'test', description: '', repo: config.repo.remote, provider: 'git', reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       sources: [{ name: 'current', repo: producer }],
       toolPaths: { claude: { skills: '.claude/skills' } },
     };

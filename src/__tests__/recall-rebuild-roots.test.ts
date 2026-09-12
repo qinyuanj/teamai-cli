@@ -102,7 +102,7 @@ describe('recall rebuilding a missing index', () => {
     skill('untagged-root', 'untagged-root');
     vi.mocked(loadTeamConfig).mockResolvedValue({
       team: 't', description: '', repo: 'r', provider: 'git', reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {},
     });
 
@@ -158,7 +158,7 @@ describe('recall rebuilding a missing index', () => {
     rule('beta/billing.md');
     vi.mocked(loadTeamConfig).mockResolvedValue({
       team: 't', description: '', repo: 'r', provider: 'git', reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {},
     });
 
@@ -205,7 +205,7 @@ describe('recall rebuilding a missing index with a team manifest it cannot read 
     );
     vi.mocked(loadTeamConfig).mockResolvedValue({
       team: 't', description: '', repo: 'r', provider: 'git', reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {},
     });
   });
@@ -333,7 +333,7 @@ describe('recall rebuilding an older-format index with a team manifest it cannot
     fs.writeFileSync(indexPath(), JSON.stringify({ version: 1, entries: stale }));
     vi.mocked(loadTeamConfig).mockResolvedValue({
       team: 't', description: '', repo: 'r', provider: 'git', reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {},
     });
   });

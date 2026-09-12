@@ -69,7 +69,7 @@ describe('RulesHandler.scanLocalForPush — modified rule detection', () => {
       repo: 'https://git.woa.com/test/repo.git',
       provider: 'tgit' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {
         claude: { skills: '.claude/skills', rules: '.claude/rules', settings: '.claude/settings.json', claudemd: '.claude/CLAUDE.md' },
       },
@@ -273,7 +273,7 @@ describe('RulesHandler.scanLocalForPush — subdirectory support', () => {
       repo: 'https://git.woa.com/test/repo.git',
       provider: 'tgit' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {
         claude: { skills: '.claude/skills', rules: '.claude/rules', settings: '.claude/settings.json', claudemd: '.claude/CLAUDE.md' },
       },
@@ -507,7 +507,7 @@ describe('RulesHandler.scanTeamForPull — subdirectory support', () => {
       repo: 'https://git.woa.com/test/repo.git',
       provider: 'tgit' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {
         claude: { skills: '.claude/skills', rules: '.claude/rules', settings: '.claude/settings.json', claudemd: '.claude/CLAUDE.md' },
       },
@@ -579,7 +579,7 @@ describe('RulesHandler.pullAllRules — stale file cleanup', () => {
       repo: 'https://git.woa.com/test/repo.git',
       provider: 'tgit' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {
         claude: { skills: '.claude/skills', rules: '.claude/rules', settings: '.claude/settings.json', claudemd: '.claude/CLAUDE.md' },
       },
@@ -1104,7 +1104,7 @@ describe('RulesHandler.pullAllRules — OpenCode instructions activation', () =>
     handler = new RulesHandler();
     teamConfig = {
       team: 'test', description: '', repo: 'r', provider: 'tgit' as const, reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {
         opencode: {
           skills: '.opencode/skills', rules: '.opencode/rules', agents: '.opencode/agents',
@@ -1354,7 +1354,7 @@ describe('RulesHandler — .mdc handling (Cursor, JoyCode)', () => {
       repo: 'https://git.woa.com/test/repo.git',
       provider: 'tgit' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {
         claude: { skills: '.claude/skills', rules: '.claude/rules', settings: '.claude/settings.json', claudemd: '.claude/CLAUDE.md' },
         cursor: { skills: '.cursor/skills', rules: '.cursor/rules', settings: '.cursor/hooks.json' },
@@ -1710,7 +1710,7 @@ describe('RulesHandler — Kiro and Qoder rule formats (#946)', () => {
       repo: 'https://git.woa.com/test/repo.git',
       provider: 'tgit' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {
         claude: { rules: '.claude/rules' },
         kiro: { rules: '.kiro/steering' },
@@ -1905,7 +1905,7 @@ describe('RulesHandler.pullAllRules — Kimi Code CLI inline rules', () => {
     handler = new RulesHandler();
     teamConfig = {
       team: 'test', description: '', repo: 'r', provider: 'tgit' as const, reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {
         kimi: { skills: '.kimi-code/skills', agents: '.kimi-code/agents', claudemd: '.kimi-code/AGENTS.md' },
       },
@@ -2008,7 +2008,7 @@ describe('RulesHandler.pullAllRules — Hermes SOUL.md (#938)', () => {
     await fse.ensureDir(path.join(repoPath, 'rules'));
     teamConfig = {
       team: 'test', description: '', repo: 'r', provider: 'tgit' as const, reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: { hermes: { skills: 'skills' } },
     } as unknown as TeamaiConfig;
     localConfig = {

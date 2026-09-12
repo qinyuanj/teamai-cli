@@ -47,7 +47,7 @@ describe.each(ALIASES)('source metadata enumeration for accepted alias %s', (ali
     foreign = { ...current, repo: { ...current.repo, localPath: path.join(root, 'foreign-team') } };
     team = {
       team: 'test', description: '', repo: current.repo.remote, provider: 'git', reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       sources: [{ name: 'current', repo: producer }],
       toolPaths: { claude: { skills: '.claude/skills' }, codex: { skills: '.codex/skills' } },
     };

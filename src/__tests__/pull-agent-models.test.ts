@@ -124,7 +124,6 @@ describe('pull: recorded agent models on an unchanged team revision', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '' },
         env: { injectShellProfile: true },
       },

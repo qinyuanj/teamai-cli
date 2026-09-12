@@ -27,6 +27,8 @@ teamai push --role pm
 
 Shared-root skills keep the existing tag-subscription delivery rules when roles or projects filter skills. `--shared` selects the publishing location.
 
+Every skill installs flat as `<tool skills dir>/<name>`, so a name must be unique across `skills/` and its groups. When pull would deliver one name from two paths, it skips that skill, keeps any installed copy, installs the rest and exits non-zero; `teamai doctor` lists the paths. Rename one of them.
+
 ## Rules
 
 ```bash
@@ -37,14 +39,6 @@ cat > ~/.claude/rules/code-review-guide.md << 'EOF'
 EOF
 
 teamai push
-```
-
-A rule members cannot delete goes in `teamai.yaml`:
-
-```yaml
-sharing:
-  rules:
-    enforced: [code-review-guide]
 ```
 
 A rule you wrote yourself stays. `push` writes back only the body of a rule the team already has.

@@ -77,7 +77,6 @@ describe('Cursor roots', () => {
     reviewers: [],
     sharing: {
       skills: {},
-      rules: { enforced: [] },
       docs: { localDir: '~/.teamai/docs' },
       env: { injectShellProfile: false },
     },

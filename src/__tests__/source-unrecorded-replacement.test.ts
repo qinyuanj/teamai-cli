@@ -49,7 +49,7 @@ describe('repository replacement with unrecorded source destinations', () => {
     };
     team = {
       team: 'test', description: '', repo: config.repo.remote, provider: 'git', reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       sources: [{ name: 'shared', repo: producer }],
       toolPaths: { claude: { skills: '.claude/skills' }, codex: { skills: '.codex/skills' } },
     };

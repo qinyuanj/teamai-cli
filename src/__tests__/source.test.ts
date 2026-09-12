@@ -55,7 +55,7 @@ describe('source', () => {
       repo: 'https://git.woa.com/test/repo.git',
       provider: 'tgit' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {
         claude: { skills: '.claude/skills', rules: '.claude/rules' },
       },

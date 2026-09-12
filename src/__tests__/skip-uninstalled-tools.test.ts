@@ -20,7 +20,6 @@ function legacyPruneTeamConfig(
     reviewers: [],
     sharing: {
       skills: {},
-      rules: { enforced: [] },
       docs: { localDir: '' },
       env: { injectShellProfile: true },
     },
@@ -182,7 +181,6 @@ describe('SkillsHandler.pullItem — skip uninstalled tools', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '' },
         env: { injectShellProfile: true },
       },
@@ -283,7 +281,6 @@ describe('RulesHandler.pullItem — skip uninstalled tools', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '' },
         env: { injectShellProfile: true },
       },
@@ -383,7 +380,6 @@ describe('RulesHandler.pullAllRules — skip CLAUDE.md update for uninstalled to
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '' },
         env: { injectShellProfile: true },
       },
@@ -456,7 +452,6 @@ describe('deployBuiltinSkills — skip uninstalled tools', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '' },
         env: { injectShellProfile: true },
       },
@@ -491,7 +486,6 @@ describe('deployBuiltinSkills — skip uninstalled tools', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '' },
         env: { injectShellProfile: true },
       },
@@ -527,7 +521,6 @@ describe('deployBuiltinSkills — skip uninstalled tools', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '' },
         env: { injectShellProfile: true },
       },
@@ -573,7 +566,6 @@ describe('deployBuiltinSkills — skip uninstalled tools', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '' },
         env: { injectShellProfile: true },
       },
@@ -612,7 +604,6 @@ describe('deployBuiltinSkills — skip uninstalled tools', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '' },
         env: { injectShellProfile: true },
       },
@@ -666,7 +657,6 @@ describe('deployBuiltinSkills — skip uninstalled tools', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '' },
         env: { injectShellProfile: true },
       },
@@ -1124,7 +1114,7 @@ describe('deployBuiltinSkills — skip uninstalled tools', () => {
       repo: 'https://git.woa.com/test/repo.git',
       provider: 'tgit' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: { claude: { skills: '.claude/skills' } },
     };
     const localConfig = {
@@ -1164,7 +1154,7 @@ describe('deployBuiltinSkills — skip uninstalled tools', () => {
       repo: 'https://example.test/team.git',
       provider: 'git' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: { codex: { skills: '.codex/skills' } },
     };
     const localConfig = {
@@ -1216,7 +1206,7 @@ describe('deployBuiltinSkills — skip uninstalled tools', () => {
       repo: 'https://example.test/team.git',
       provider: 'git' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: { claude: { skills: '.claude/skills' } },
     };
     const localConfig = {
@@ -1258,7 +1248,7 @@ describe('deployBuiltinSkills — skip uninstalled tools', () => {
       repo: 'https://example.test/team.git',
       provider: 'git' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: { claude: { skills: '.claude/skills' } },
     };
     const localConfig = {
@@ -1299,7 +1289,7 @@ describe('deployBuiltinSkills — skip uninstalled tools', () => {
       repo: 'https://example.test/team.git',
       provider: 'git' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: { claude: { skills: '.claude/skills' }, codex: { skills: '.codex/skills' } },
     };
     const localConfig = {
@@ -1332,7 +1322,7 @@ describe('deployBuiltinSkills — skip uninstalled tools', () => {
       repo: 'https://example.test/team.git',
       provider: 'git' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: { codex: { skills: '.codex/skills' } },
     };
     const localConfig = {
@@ -1376,7 +1366,6 @@ describe('deployBuiltinSkills — enabledAgents whitelist (#510)', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '' },
         env: { injectShellProfile: true },
       },

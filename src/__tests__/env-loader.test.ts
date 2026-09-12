@@ -49,7 +49,7 @@ describe('team env by directory (#1018)', () => {
       repo: 'https://git.example.com/team/repo.git',
       provider: 'git',
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {},
     } as TeamaiConfig;
   });

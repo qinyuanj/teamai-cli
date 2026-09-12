@@ -131,7 +131,6 @@ describe('pull: an active namespace item replaces the root item of the same name
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '' },
         env: { injectShellProfile: true },
       },

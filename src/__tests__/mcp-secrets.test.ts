@@ -45,7 +45,7 @@ describe('MCP servers and declared secrets', () => {
   let localConfig: LocalConfig;
   const teamConfig: TeamaiConfig = {
     team: 't', description: '', repo: 'r', provider: 'tgit', reviewers: [],
-    sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '~/.teamai/docs' }, env: { injectShellProfile: false } },
+    sharing: { skills: {}, docs: { localDir: '~/.teamai/docs' }, env: { injectShellProfile: false } },
     toolPaths: { claude: { skills: '.claude/skills', settings: '.claude/settings.json', mcp: '.claude.json', mcpProject: '.mcp.json' } },
   };
 
