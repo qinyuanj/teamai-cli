@@ -91,7 +91,7 @@ describe('a missing declared secret tells the member what to run', () => {
     localConfig = { repo: { localPath: repoPath, remote: 'owner/repo' }, username: 'tester', scope: 'user', additionalRoles: [] };
     teamConfig = {
       team: 'test', description: '', repo: 'owner/repo', provider: 'git', reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: false } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: false } },
       toolPaths: { claude: { skills: '.claude/skills', mcp: '.claude.json' } },
     };
     await write('teamai.yaml', 'team: test\n');

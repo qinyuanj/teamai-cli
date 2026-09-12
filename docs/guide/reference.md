@@ -20,7 +20,6 @@ description: Team AI resource repo
 repo: https://github.com/your-org/your-repo.git
 provider: github
 # language: en                # optional. en is English only. Omit it, or set zh, and the recall rule, TodoWrite hint, and merged-MR hint stay bilingual
-# scope: ignored if present. teamai init --scope sets the local install
 
 reviewers:
   - reviewer1
@@ -31,8 +30,6 @@ packages:
       version: "*"
 
 sharing:
-  rules:
-    enforced: [code-review-guide]
   recall:
     enabled: false
   docs:
@@ -60,6 +57,8 @@ sharing:
         retries: 3
 
 ```
+
+Keys in `teamai.yaml` this CLI version does not recognize are ignored, so an old or misspelled key never breaks loading; `teamai doctor` lists them as a warning.
 
 ### config.yaml (local config)
 

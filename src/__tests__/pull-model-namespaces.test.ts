@@ -186,7 +186,6 @@ describe('pull: team model profiles by namespace', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '' },
         env: { injectShellProfile: true },
       },

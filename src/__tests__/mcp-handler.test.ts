@@ -107,7 +107,7 @@ servers:
       repo: 'owner/repo',
       provider: 'github',
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {},
     };
     await new McpHandler().removeItem('gone', teamConfig, member());

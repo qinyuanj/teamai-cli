@@ -63,7 +63,7 @@ describe('projects add / update / remove (#756)', () => {
         repo: 'https://github.com/team/repo.git',
         provider: 'github' as const,
         reviewers: [],
-        sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+        sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
         toolPaths: {},
       },
     } as unknown as Awaited<ReturnType<typeof autoDetectInit>>);

@@ -75,7 +75,7 @@ describe('RulesHandler.removeItem', () => {
       repo: 'https://git.woa.com/test/repo.git',
       provider: 'tgit' as const,
       reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: {
         claude: { skills: '.claude/skills', rules: '.claude/rules', settings: '.claude/settings.json', claudemd: '.claude/CLAUDE.md' },
         codex: { skills: '.codex/skills', rules: '.codex/rules' },
@@ -308,7 +308,6 @@ describe('SkillsHandler.removeItem', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '' },
         env: { injectShellProfile: true },
       },
@@ -437,7 +436,7 @@ describe('Tombstone mechanism', () => {
         repo: 'https://git.woa.com/test/repo.git',
         provider: 'tgit' as const,
         reviewers: [],
-        sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+        sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
         toolPaths: {
           claude: { skills: '.claude/skills', rules: '.claude/rules', settings: '.claude/settings.json', claudemd: '.claude/CLAUDE.md' },
         },
@@ -556,7 +555,6 @@ scope: 'user',
         reviewers: [],
         sharing: {
           skills: {},
-          rules: { enforced: [] },
           docs: { localDir: '' },
           env: { injectShellProfile: true },
         },
@@ -688,7 +686,6 @@ scope: 'user',
         reviewers: [],
         sharing: {
           skills: {},
-          rules: { enforced: [] },
           docs: { localDir: '' },
           env: { injectShellProfile: true },
         },
@@ -779,7 +776,7 @@ scope: 'user',
       };
       const teamConfig: TeamaiConfig = {
         team: 'test', description: '', repo: '', provider: 'tgit' as const, reviewers: [],
-        sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+        sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
         toolPaths: { claude: { skills: '.claude/skills', rules: '.claude/rules' } },
       };
 
@@ -801,7 +798,7 @@ scope: 'user',
       };
       const teamConfig: TeamaiConfig = {
         team: 'test', description: '', repo: '', provider: 'tgit' as const, reviewers: [],
-        sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+        sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
         toolPaths: { claude: { skills: '.claude/skills', rules: '.claude/rules' } },
       };
 
@@ -835,7 +832,7 @@ scope: 'user',
 
       const teamConfig: TeamaiConfig = {
         team: 'test', description: '', repo: '', provider: 'tgit' as const, reviewers: [],
-        sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+        sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
         toolPaths: { claude: { skills: '.claude/skills', rules: '.claude/rules' } },
       };
       const localConfig: LocalConfig = {
@@ -873,7 +870,7 @@ scope: 'user',
 
       const teamConfig: TeamaiConfig = {
         team: 'test', description: '', repo: '', provider: 'tgit' as const, reviewers: [],
-        sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+        sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
         toolPaths: { claude: { skills: '.claude/skills', rules: '.claude/rules' } },
       };
       const localConfig: LocalConfig = {
@@ -925,7 +922,7 @@ scope: 'user',
 
       const teamConfig: TeamaiConfig = {
         team: 'test', description: '', repo: '', provider: 'tgit' as const, reviewers: [],
-        sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+        sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
         toolPaths: { claude: { skills: '.claude/skills', rules: '.claude/rules' } },
       };
       const localConfig: LocalConfig = {
@@ -958,7 +955,7 @@ scope: 'user',
 
       const teamConfig: TeamaiConfig = {
         team: 'test', description: '', repo: '', provider: 'tgit' as const, reviewers: [],
-        sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+        sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
         toolPaths: { claude: { skills: '.claude/skills', rules: '.claude/rules' } },
       };
       const localConfig: LocalConfig = {

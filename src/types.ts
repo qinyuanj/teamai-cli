@@ -93,9 +93,6 @@ export function installScopeName(scope: Scope): 'user' | 'workspace' {
 
 export const SharingConfigSchema = z.object({
   skills: z.object({}).default({}),
-  rules: z.object({
-    enforced: z.array(z.string()).default([]),
-  }).default({}),
   docs: z.object({
     localDir: z.string().default('~/.teamai/docs'),
   }).default({}),
@@ -698,11 +695,6 @@ export const TeamaiConfigBaseSchema = z.object({
   description: z.string().default(''),
   repo: z.string(),
   provider: ProviderNameSchema.default('tgit'),
-  /**
-   * @deprecated Ignored by `teamai init` (issue #250). Local install scope is
-   * decided only by CLI `--scope` / default. Kept optional for old teamai.yaml files.
-   */
-  scope: ScopeEnum.optional(),
   /**
    * Single-repo mode marker. Committed to main inside <repo>/.teamai/teamai.yaml
    * so it travels with `git clone`. When a teammate clones a repo carrying

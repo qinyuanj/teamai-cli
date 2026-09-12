@@ -68,7 +68,7 @@ describe('projectsMembers: inherited member root (#735)', () => {
         repo: 'https://git.woa.com/team/repo.git',
         provider: 'tgit' as const,
         reviewers: [],
-        sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+        sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
         toolPaths: {},
       },
     });

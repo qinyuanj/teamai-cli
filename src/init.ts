@@ -1446,7 +1446,6 @@ export async function initSelfRepo(options: GlobalOptions & {
       repo: repoInfo.httpsUrl,
       provider: teamProvider,
       sharing: {
-        rules: { enforced: [] },
         docs: { localDir: './.teamai/docs' },
         env: { injectShellProfile: true },
         // A new team keeps what teamai delivers out of git (#915).
@@ -2148,7 +2147,6 @@ export async function init(options: GlobalOptions & {
       repo: repoInfo.httpsUrl,
       provider: teamProvider,
       sharing: {
-        rules: { enforced: [] },
         docs: { localDir: scope === 'project' ? './.teamai/docs' : '~/.teamai/docs' },
         env: { injectShellProfile: true },
         // A new team keeps what teamai delivers out of git (#915).

@@ -27,6 +27,8 @@ teamai push --role pm
 
 角色或项目过滤 skill 时，共享根目录的 skill 仍按原有 tags 订阅规则交付。`--shared` 选择的是发布位置。
 
+每个 skill 都平铺安装为 `<工具 skills 目录>/<name>`，所以名字在 `skills/` 及其各分组之间必须唯一。pull 要从两个路径交付同一个名字时，会跳过这个 skill，保留已安装的副本，照常安装其余 skill，并以非零码退出；`teamai doctor` 会列出这些路径。把其中一个改名即可。
+
 ## Rules
 
 ```bash
@@ -37,14 +39,6 @@ cat > ~/.claude/rules/code-review-guide.md << 'EOF'
 EOF
 
 teamai push
-```
-
-成员不能删的 rule，写在 `teamai.yaml`：
-
-```yaml
-sharing:
-  rules:
-    enforced: [code-review-guide]
 ```
 
 你自己的 rule 会留下。`push` 只把已有团队 rule 的正文写回仓库。

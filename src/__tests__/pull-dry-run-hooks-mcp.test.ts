@@ -128,7 +128,7 @@ describe('pull --dry-run reports hooks and MCP entry warnings', () => {
       provider: 'github',
       reviewers: [],
       sharing: {
-        skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true },
+        skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true },
       },
       toolPaths: {
         claude: { skills: '.claude/skills', rules: '.claude/rules', settings: '.claude/settings.json' },

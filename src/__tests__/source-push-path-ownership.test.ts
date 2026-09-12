@@ -31,7 +31,7 @@ describe('source push uses physical path ownership', () => {
     };
     team = {
       team: 'test', description: '', repo: config.repo.remote, provider: 'git', reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
       toolPaths: { claude: { skills: '.claude/skills' }, codex: { skills: '.codex/skills' } },
     };
     await fse.ensureDir(path.join(config.repo.localPath, 'skills'));

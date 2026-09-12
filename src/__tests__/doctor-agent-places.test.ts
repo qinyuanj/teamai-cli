@@ -70,7 +70,7 @@ describe('doctor — where a tool takes agents', () => {
     localConfig = { repo: { localPath: repoPath, remote: 'owner/repo' }, username: 'tester', scope: 'user', additionalRoles: [] };
     teamConfig = {
       team: 'test', description: '', repo: 'owner/repo', provider: 'git', reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: false } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: false } },
       toolPaths: { opencode: { agents: '.config/opencode/agents' } },
     };
     vi.mocked(loadLocalConfig).mockResolvedValue(localConfig);

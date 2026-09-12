@@ -109,7 +109,6 @@ describe('MCP reconcile', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '~/.teamai/docs' },
         env: { injectShellProfile: false },
       },
@@ -4239,7 +4238,7 @@ describe('MCP reconcile — OpenCode', () => {
     teamConfig = {
       team: 't', description: '', repo: 'r', provider: 'tgit', reviewers: [],
       sharing: {
-        skills: {}, rules: { enforced: [] }, docs: { localDir: '~/.teamai/docs' },
+        skills: {}, docs: { localDir: '~/.teamai/docs' },
         env: { injectShellProfile: false }, mcp: { autoApply: true, allowedCommands: [], allowedHosts: [] },
       },
       toolPaths: OPENCODE_TOOL_PATHS,

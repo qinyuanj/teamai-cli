@@ -1,6 +1,7 @@
 import { hookToolPathsForConfig } from './types.js';
 import path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
+import YAML from 'yaml';
 import { detectProjectConfig, loadLocalConfig, loadTeamConfig } from './config.js';
 import { explainRunMode, type ExplainedRunMode } from './launch-context.js';
 import { readWorkspaceChildren } from './workspace-children.js';
@@ -15,6 +16,7 @@ import {
   detectToolRoot,
   resolveToolRootDir,
   toolRootRejection,
+  TeamaiConfigBaseSchema,
   resolveHookScope,
   legacyManagedHooksPath,
   resolveToolBaseDir,
@@ -581,6 +583,26 @@ async function codexHookTrust(ctx: DoctorContext): Promise<{ checks: Check[]; no
 }
 
 /**
+ * Top-level teamai.yaml keys the current schema does not declare. zod strips them
+ * silently on load, so without this a misspelled or removed key goes unnoticed.
+ * Returns [] when teamai.yaml is missing or unparseable — the validity check
+ * reports that case.
+ */
+async function findUnrecognizedTeamConfigKeys(repoPath: string): Promise<string[]> {
+  const content = await readFileSafe(path.join(repoPath, 'teamai.yaml'));
+  if (!content) return [];
+  let raw: unknown;
+  try {
+    raw = YAML.parse(content);
+  } catch {
+    return [];
+  }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return [];
+  const known = new Set(Object.keys(TeamaiConfigBaseSchema.shape));
+  return Object.keys(raw).filter((key) => !known.has(key));
+}
+
+/**
  * Resolve the local/team configuration the checks run against. Returns null
  * when TeamAI is not initialized here — the caller decides how to report that.
  */
@@ -984,6 +1006,13 @@ export async function doctor(options: DoctorOptions): Promise<boolean> {
     const scopeLabel = `${installScopeName(scope)}${scope === 'project' && localConfig.projectRoot ? ` (${localConfig.projectRoot})` : ''}`;
     console.log(`  Scope: ${scopeLabel}\n`);
     console.log(formatRunMode(runMode));
+
+    // Warning only: team repos are shared across CLI versions, so a key this
+    // version does not know may be valid for a newer one. Never fails doctor.
+    const unrecognizedKeys = await findUnrecognizedTeamConfigKeys(localConfig.repo.localPath);
+    if (unrecognizedKeys.length > 0) {
+      console.log(`  ⚠ teamai.yaml has keys this teamai version does not recognize (ignored): ${unrecognizedKeys.join(', ')}`);
+    }
   }
 
   // --fix runs before the checks, so the report reflects the post-cleanup state.

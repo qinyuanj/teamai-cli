@@ -80,7 +80,7 @@ describe('doctor — namespace overrides and repeated names', () => {
       provider: 'git',
       reviewers: [],
       sharing: {
-        skills: {}, rules: { enforced: [] }, docs: { localDir: '' },
+        skills: {}, docs: { localDir: '' },
         env: { injectShellProfile: false },
       },
       toolPaths: { claude: { skills: '.claude/skills', rules: '.claude/rules', agents: '.claude/agents' } },

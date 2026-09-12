@@ -56,7 +56,6 @@ describe('syncTeamUpdatesToLocal — a skill copy that fails partway', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '' },
         env: { injectShellProfile: true },
       },

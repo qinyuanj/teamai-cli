@@ -141,7 +141,7 @@ describe('doctor — env variables reach a shell', () => {
       provider: 'git',
       reviewers: [],
       sharing: {
-        skills: {}, rules: { enforced: [] }, docs: { localDir: '' },
+        skills: {}, docs: { localDir: '' },
         env: { injectShellProfile: true },
       },
       toolPaths: {},

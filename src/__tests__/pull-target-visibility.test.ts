@@ -94,7 +94,6 @@ describe('pull — uninstalled tool visibility', () => {
       reviewers: [],
       sharing: {
         skills: {},
-        rules: { enforced: [] },
         docs: { localDir: '' },
         env: { injectShellProfile: true },
       },
