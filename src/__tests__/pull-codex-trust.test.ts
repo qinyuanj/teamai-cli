@@ -215,7 +215,9 @@ describe('pull trusts the Codex project after writing its MCP servers', () => {
     await fse.ensureDir(empty);
     vi.stubEnv('PATH', empty);
     await pull({ force: true });
-    expect(vi.mocked(log.warn).mock.calls.map(([message]) => message).filter((message) => /trust.*Codex|Codex.*trust/i.test(message))).toEqual([]);
+    // The temp dir's name says codex-trust too, so a warning that only names a path must not match.
+    expect(vi.mocked(log.warn).mock.calls.map(([message]) => message)
+      .filter((message) => /trust.*Codex|Codex.*trust/i.test(message.replaceAll(tempDir, '')))).toEqual([]);
   });
 
 });

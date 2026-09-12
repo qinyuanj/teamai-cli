@@ -2,10 +2,32 @@ import YAML from 'yaml';
 import path from 'node:path';
 import { requireInit, detectProjectConfig } from './config.js';
 import { readFileSafe, listFiles } from './utils/fs.js';
-import { pullRepo } from './utils/git.js';
+import { pullRepo, getGitIdentity } from './utils/git.js';
 import { log } from './utils/logger.js';
 import { MemberConfigSchema } from './types.js';
 import type { GlobalOptions, LocalConfig, MemberConfig } from './types.js';
+
+/** Why a registration commit cannot be made: git has no author identity. */
+const MISSING_GIT_IDENTITY = 'Git identity is not configured, so the registration commit cannot be authored.';
+
+/** Print the commands that fix MISSING_GIT_IDENTITY. */
+export function logGitIdentityFix(): void {
+  log.info('  git config --global user.name "Your Name"');
+  log.info('  git config --global user.email "you@example.com"');
+}
+
+/**
+ * Preflight for a registration commit. Git refuses to commit without an author
+ * ("Author identity unknown"), so callers check before writing anything and
+ * print a fix instead of a raw git error.
+ *
+ * @param repoPath - Repo the commit would be made in (local config applies).
+ * @returns MISSING_GIT_IDENTITY when user.name or user.email is unset, else null.
+ */
+export async function checkGitIdentity(repoPath: string): Promise<string | null> {
+  const identity = await getGitIdentity(repoPath);
+  return identity.name && identity.email ? null : MISSING_GIT_IDENTITY;
+}
 
 /**
  * Read a specific member's config from the repo.

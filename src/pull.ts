@@ -1,4 +1,4 @@
-import { hookToolPathsForConfig } from './types.js';
+import { hookToolPathsForConfig, resolveBaseDir, toolInstallRoot } from './types.js';
 import path from 'node:path';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
@@ -536,6 +536,80 @@ function logSyncDetail(
   if (verbose && updated.length > 0) {
     const updatedNames = updated.map(i => i.name);
     log.dim(`    updated: ${updatedNames.join(', ')}`);
+  }
+}
+
+/**
+ * The tool-side paths that can receive team-owned resources; their roots are
+ * the directories a skipped target names as missing.
+ */
+function resourceToolPaths(toolPath: { skills?: string; rules?: string; agents?: string }): string[] {
+  return [toolPath.skills, toolPath.rules, toolPath.agents].filter((p): p is string => !!p);
+}
+
+/**
+ * Report the tool targets this sync could not write to, and why.
+ *
+ * Resource handlers skip a tool whose root directory is absent, which used to be
+ * invisible: pull printed a green "Synced N skills" even when every target was
+ * skipped and nothing reached the disk. Naming each skipped target and the exact
+ * directory that was missing makes a zero-install pull diagnosable, and the
+ * all-skipped case is a warning rather than a success.
+ *
+ * Most machines have a dozen uninstalled tools, so the per-target lines would be
+ * noise on a healthy pull: they are printed in full only when nothing installed
+ * (the failure this exists for) or under `--verbose`, and summarized on one line
+ * otherwise.
+ *
+ * `openclaw` and `hermes` resolve their own roots (workspace dir / HERMES_HOME)
+ * instead of gating on baseDir, so they are not reported here.
+ */
+async function reportSkippedTargets(
+  teamConfig: TeamaiConfig,
+  localConfig: LocalConfig,
+  scopeLabel: string,
+  verbose = false,
+): Promise<void> {
+  const baseDir = resolveBaseDir(localConfig);
+  const receiving = new Set(await getInstalledResourceTargets(teamConfig, localConfig));
+  const skipped: string[] = [];
+  const skippedTools: string[] = [];
+  let installed = 0;
+
+  for (const [tool, toolPath] of Object.entries(scopedToolPaths(teamConfig, localConfig))) {
+    if (isAgentExcluded(localConfig, tool)) continue;
+    if (tool === 'openclaw' || tool === 'hermes') continue;
+
+    const resourcePaths = resourceToolPaths(toolPath);
+    if (resourcePaths.length === 0) continue;
+    // The same test pull uses to pick targets, so a tool this pull did write to
+    // is never reported as skipped.
+    if (receiving.has(tool)) {
+      installed++;
+      continue;
+    }
+
+    const missingRoots = [...new Set(resourcePaths.map((p) => path.join(baseDir, toolInstallRoot(p))))];
+    skippedTools.push(tool);
+    skipped.push(`[${scopeLabel}] ${tool}: skipped — ${missingRoots.join(', ')} not found`);
+  }
+
+  if (skipped.length === 0) return;
+
+  if (installed > 0 && !verbose) {
+    log.info(
+      `[${scopeLabel}] ${skipped.length} tool target(s) skipped — directory not found: ` +
+      `${skippedTools.join(', ')} (run with --verbose for the exact paths).`,
+    );
+  } else {
+    for (const line of skipped) log.info(line);
+  }
+
+  if (installed === 0) {
+    log.warn(
+      `[${scopeLabel}] No AI tool directories found under ${baseDir} — nothing was installed. ` +
+      'Run `teamai init --agent <id>` to enable a tool (creates its directory), then pull again.',
+    );
   }
 }
 
@@ -2191,6 +2265,8 @@ async function pullForScope(
 
     totalSynced += items.length;
   }
+
+  await reportSkippedTargets(freshConfig, localConfig, scopeLabel, !!options.verbose);
 
   // Skills this pull removes because they are no longer delivered here, named
   // in one line at the end of Step 3b so a member learns where they went (#911).

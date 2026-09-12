@@ -4,7 +4,7 @@
 
 ---
 
-TeamAI CLI talks to Git hosting platforms through a provider layer. Six providers are implemented:
+TeamAI CLI talks to Git hosting platforms through a provider layer. Seven providers are implemented:
 
 | Provider | Host | Authentication | Suggested for |
 |----------|------|----------------|---------------|
@@ -12,7 +12,8 @@ TeamAI CLI talks to Git hosting platforms through a provider layer. Six provider
 | `cnb` | cnb.cool | `cnb login` or the `CNB_TOKEN` environment variable | CNB (Cloud Native Build) users |
 | `gitlab` | gitlab.com or a self-hosted instance | `GITLAB_TOKEN` environment variable | GitLab, including enterprise self-hosted |
 | `gitcode` | gitcode.com | `GITCODE_TOKEN` environment variable, or paste a token during init | GitCode (CSDN) users |
-| `git` | any Git host | The system Git credential helper or an SSH key | Self-hosted Gitea and other platforms |
+| `gitea` | self-hosted instances only | `GITEA_TOKEN` environment variable (see `GITEA_URL` below) | Self-hosted Gitea |
+| `git` | any Git host | The system Git credential helper or an SSH key | Other self-hosted platforms (transport only) |
 | `tgit` | git.woa.com | `gf` CLI (downloaded automatically) + `~/.netrc` | Tencent internal teams |
 
 ## Provider auto-detection
@@ -31,6 +32,7 @@ https://gitlab.com/org/repo(.git)       → gitlab
 git@gitlab.com:org/repo.git             → gitlab
 https://gitcode.com/org/repo(.git)      → gitcode
 git@gitcode.com:org/repo.git            → gitcode
+https://gitea.example.com/org/repo.git  → gitea (GITEA_URL must be set)
 https://git.example.com/group/repo.git  → git
 git@git.example.com:group/repo.git      → git
 ```
@@ -43,14 +45,16 @@ After a successful init the provider is written to the `provider` field of the t
 teamai init https://gitlab.example.com/group/repo --provider git
 ```
 
-Values: `tgit`, `github`, `cnb`, `gitlab`, `gitcode`, `git`. `git` needs no platform token and uses your existing Git credentials; open PRs/MRs on the Git host yourself. The choice only affects your machine. A self-hosted GitLab with `--provider gitlab` still needs `GITLAB_URL` and `GITLAB_TOKEN`.
+Values: `tgit`, `github`, `cnb`, `gitlab`, `gitcode`, `gitea`, `git`. `git` needs no platform token and uses your existing Git credentials; open PRs/MRs on the Git host yourself. The choice only affects your machine. A self-hosted GitLab with `--provider gitlab` still needs `GITLAB_URL` and `GITLAB_TOKEN`.
 
 ## Generic Git provider (self-hosted and private repos)
 
-A full HTTPS or SSH URL whose host is not in the known list gets the `git` provider. For example:
+A full HTTP(S) or SSH URL whose host is not in the known list gets the `git` provider. For example:
 
 ```bash
 teamai init https://code.qschou.com/Enterprise/arb-workflow-kit.git --scope user
+# HTTP-only intranet servers work too; the scheme is kept, never upgraded to https
+teamai init http://code.internal:3000/team/skills.git --scope user
 # or over SSH
 teamai init git@code.qschou.com:Enterprise/arb-workflow-kit.git --scope user
 ```
@@ -63,7 +67,7 @@ teamai init https://dev.azure.com/org/project/_git/repo
 
 The generic provider neither reads nor stores a platform token; the system `git` handles authentication:
 
-- HTTPS: configure a Git credential helper first. Do not put a username, password or token in the URL.
+- HTTP(S): configure a Git credential helper first. Do not put a username, password or token in the URL. Plain HTTP is unencrypted; use it only on a trusted intranet.
 - SSH: configure an SSH key first and make sure `ssh-agent` can reach the private key.
 
 ## GitHub provider
@@ -231,9 +235,48 @@ GitCode namespaces are single-level (a user or an organization); repo addresses 
 
 GitCode sets no default email domain and uses the user's global git configuration.
 
+## Gitea provider (self-hosted only)
+
+Gitea uses its **REST API v1** (`<base>/api/v1`), needs no external CLI, and relies on a single access token.
+
+### Authentication
+
+```bash
+export GITEA_URL=https://gitea.example.com     # instance base URL, scheme required
+export GITEA_TOKEN=xxxxxxxxxxxxxxxxxxxx        # access token with repo scope
+```
+
+Create the token under Gitea → Settings → Applications → Generate Token. Token variables are read in this order: `GITEA_TOKEN`, `GITEA_ACCESS_TOKEN`, `GITEA_PAT`; empty values are skipped.
+
+**`GITEA_URL` has no default.** Gitea has no public flagship instance, so API operations (for example `teamai push` opening a PR) fail with an error until it is set. `TEAMAI_GITEA_HOST` overrides only the host used for detection and is not enough for API calls.
+
+### Detection and `teamai init`
+
+- A URL whose host (including port) matches `GITEA_URL` or `TEAMAI_GITEA_HOST` is detected as `gitea`. Without either, a Gitea URL falls back to the `git` provider.
+- When the cloned team repo's `teamai.yaml` declares `provider: gitea`, `teamai init` switches to Gitea even if detection gave `git`. The API base comes from the team repo URL (`GITEA_URL` wins when set); members are registered under their Gitea login. A missing or invalid token makes init exit with an error instead of falling back to Git `user.name`. SSH team repo URLs need `GITEA_URL`.
+- Detection order: known hosts → self-hosted GitLab → self-hosted Gitea → `git`.
+
+### HTTP and custom ports
+
+The provider never upgrades `http` to `https` and keeps the port, so intranet instances such as `http://gitea.internal:3000` work as configured.
+
+### Paths and capabilities
+
+Gitea has no subgroups: repo paths are always `owner/repo`. Browser URLs with routes such as `/src/branch/main` or `/pulls/42` resolve back to the repo.
+
+- HTTPS clone sends credentials through `http.extraHeader`; the token never enters the remote URL or `.git/config`. SSH keys also work.
+- `createRepo` creates under the current user or a visible organization, and errors otherwise.
+- PRs are created through the API; reviewers are requested afterwards, and a failed reviewer request leaves the PR in place.
+- `teamai import-mr` accepts `/pulls/<n>` URLs only from the configured instance host.
+- Git over HTTP sends the token as the Basic username. Set `GITEA_USER` to send it as the password for that user instead, for example behind a proxy that rewrites auth.
+
+### Default email domain
+
+Gitea sets no default email domain and uses the user's global git configuration.
+
 ## Setting the provider in `teamai.yaml`
 
-Besides URL auto-detection, the team repo's `teamai.yaml` can name the provider explicitly with `provider: github`, `provider: tgit`, `provider: cnb`, `provider: gitlab`, `provider: gitcode` or `provider: git`. A typical `teamai.yaml`:
+Besides URL auto-detection, the team repo's `teamai.yaml` can name the provider explicitly with `provider: github`, `provider: tgit`, `provider: cnb`, `provider: gitlab`, `provider: gitcode`, `provider: gitea` or `provider: git`. `teamai init` uses the declared value only when detection falls back to `git` and the repo declares `gitea` (see [Gitea provider](#gitea-provider-self-hosted-only)); other combinations follow URL detection. A typical `teamai.yaml`:
 
 ```yaml
 team: my-team
