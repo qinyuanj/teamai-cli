@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Tencent/teamai-cli/actions/workflows/ci.yml"><img src="https://github.com/Tencent/teamai-cli/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/TLOBillyQ/teamai-cli/actions/workflows/ci.yml"><img src="https://github.com/TLOBillyQ/teamai-cli/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://www.npmjs.com/package/teamai-cli"><img src="https://img.shields.io/npm/v/teamai-cli.svg" alt="npm version"></a>
   <a href="https://www.npmjs.com/package/teamai-cli"><img src="https://img.shields.io/npm/dm/teamai-cli.svg" alt="npm downloads"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
@@ -72,9 +72,16 @@ Skills, Rules, MCP 등 Agent가 사용할 수 있는 리소스는 모두 공유�
 
 ### 설치
 
+[TLOBillyQ/teamai-cli](https://github.com/TLOBillyQ/teamai-cli)는 Tencent/teamai-cli의 주요 공식 fork입니다. Git remote, issue, PR은 GitHub를 사용합니다. Gitea는 Gitea provider를 포함하는 `@agent/teamai-cli`의 배포 registry로만 유지됩니다.
+
 ```bash
-npm install -g teamai-cli
+npm config set @agent:registry http://lzxsvn:3000/api/packages/agent/npm/
+npm install -g @agent/teamai-cli
 ```
+
+registry는 익명으로 읽을 수 있으므로 설치에 token이 필요하지 않습니다. 전역 설치는 프로젝트의 `.npmrc`를 읽지 않으므로 `npm config set`이 필요합니다.
+
+상위 프로젝트 버전은 공개 npm에서 `npm install -g teamai-cli`로 설치할 수 있지만 Gitea provider는 포함하지 않습니다.
 
 ### 팀 관리자 / 개인 사용자
 
@@ -85,14 +92,15 @@ Git 호스트(GitHub, GitLab, GitCode, CNB, TGit 또는 비공개 Git 서비스)
 ### 팀원
 
 ```bash
-# Choose one, depending on where you want resources installed
+# Gitea access token (Gitea → 설정 → 애플리케이션 → 토큰 생성)
+export GITEA_TOKEN=<your-gitea-token>
 
 # Workspace-scope init (default, resources installed under the workspace directory)
 cd /path/to/my-workspace
 teamai init https://github.com/your-org/your-repo
 
-# Or, user-scope init (resources installed under ~/)
-teamai init https://github.com/your-org/your-repo --scope user
+# 또는 사용자 범위 초기화 (~/ 아래에 설치)
+teamai init http://lzxsvn:3000/agent/yourrepo --scope user
 ```
 
 초기화가 끝나면 관리자가 배포한 최신 Skills / Rules 및 기타 Harness 업데이트가 매 AI 세션에서 자동으로 반영됩니다. 수동 동기화는 필요 없습니다.

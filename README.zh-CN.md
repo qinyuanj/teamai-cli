@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Tencent/teamai-cli/actions/workflows/ci.yml"><img src="https://github.com/Tencent/teamai-cli/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/TLOBillyQ/teamai-cli/actions/workflows/ci.yml"><img src="https://github.com/TLOBillyQ/teamai-cli/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://www.npmjs.com/package/teamai-cli"><img src="https://img.shields.io/npm/v/teamai-cli.svg" alt="npm version"></a>
   <a href="https://www.npmjs.com/package/teamai-cli"><img src="https://img.shields.io/npm/dm/teamai-cli.svg" alt="npm downloads"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
@@ -78,7 +78,7 @@ Skills、Rules、MCP 等 Agent 能用的资源都可以分享：
 
 ### 安装
 
-本分支增加了 Gitea provider，发布在内部 Gitea registry，不在公共 npm 上。
+[TLOBillyQ/teamai-cli](https://github.com/TLOBillyQ/teamai-cli) 是 Tencent/teamai-cli 的主要官方 fork，Git remote、issue 和 PR 均使用 GitHub。Gitea 仅保留为 `@agent/teamai-cli` 的发布 registry，该包包含 Gitea provider。
 
 ```bash
 npm config set @agent:registry http://lzxsvn:3000/api/packages/agent/npm/
@@ -110,7 +110,7 @@ cd /path/to/my-workspace
 teamai init https://github.com/your-org/your-repo
 
 # 或者，用户级初始化（资源安装到 ~/ 下）
-teamai init https://github.com/your-org/your-repo --scope user
+teamai init http://lzxsvn:3000/agent/yourrepo --scope user
 ```
 
 初始化完成后，每次开启 AI 会话时都会自动拉取管理员发布的 skills / rules 等 Harness 更新，无需手动同步。

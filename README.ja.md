@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Tencent/teamai-cli/actions/workflows/ci.yml"><img src="https://github.com/Tencent/teamai-cli/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/TLOBillyQ/teamai-cli/actions/workflows/ci.yml"><img src="https://github.com/TLOBillyQ/teamai-cli/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://www.npmjs.com/package/teamai-cli"><img src="https://img.shields.io/npm/v/teamai-cli.svg" alt="npm version"></a>
   <a href="https://www.npmjs.com/package/teamai-cli"><img src="https://img.shields.io/npm/dm/teamai-cli.svg" alt="npm downloads"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
@@ -72,9 +72,16 @@ Skills、Rules、MCP など、Agent が使えるリソースはすべて共有�
 
 ### インストール
 
+[TLOBillyQ/teamai-cli](https://github.com/TLOBillyQ/teamai-cli) は Tencent/teamai-cli の主要な公式 fork です。Git remote、issue、PR は GitHub を使用します。Gitea は、Gitea provider を含む `@agent/teamai-cli` の公開 registry としてのみ継続します。
+
 ```bash
-npm install -g teamai-cli
+npm config set @agent:registry http://lzxsvn:3000/api/packages/agent/npm/
+npm install -g @agent/teamai-cli
 ```
+
+registry の読み取りは匿名で、インストールに token は不要です。グローバルインストールはプロジェクトの `.npmrc` を参照しないため、`npm config set` が必要です。
+
+上流版は公開 npm から `npm install -g teamai-cli` でインストールできますが、Gitea provider は含まれません。
 
 ### チーム管理者 / 個人利用
 
@@ -85,14 +92,15 @@ Git ホスト（GitHub、GitLab、GitCode、CNB、TGit、またはプライベ�
 ### チームメンバー
 
 ```bash
-# Choose one, depending on where you want resources installed
+# Gitea access token（Gitea → 設定 → アプリケーション → トークンを生成）
+export GITEA_TOKEN=<your-gitea-token>
 
 # Workspace-scope init (default, resources installed under the workspace directory)
 cd /path/to/my-workspace
 teamai init https://github.com/your-org/your-repo
 
-# Or, user-scope init (resources installed under ~/)
-teamai init https://github.com/your-org/your-repo --scope user
+# または、ユーザー単位の初期化（~/ 以下にインストール）
+teamai init http://lzxsvn:3000/agent/yourrepo --scope user
 ```
 
 初期化後は、管理者が公開した最新の skills / rules などの Harness 更新が、AI セッション開始時に自動で取り込まれます。手動同期は不要です。
