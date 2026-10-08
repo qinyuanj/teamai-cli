@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## Fork 0.28.0 (unreleased)
+
+Rebuilt on the official upstream `v0.28.0` release (`b5b3574`). Where upstream now covers a fork change, upstream's version is kept.
+
+- Kept: Gitea provider and its onboarding (the team repo's declared `provider: gitea` wins over host detection; a missing Git identity skips member registration with the fix), Kimi Code CLI (team rules inline in `.kimi-code/AGENTS.md` in both scopes), the `@agent/teamai-cli` package, deterministic directory scans, duplicate skill names skipped by `pull` and reported by `doctor`, removal of the dead `sharing.rules.enforced` and `scope` keys with a `doctor` warning for unknown keys, migration of the pre-0.27 `[teamai:rules]` block in user rules files, and shared recall output markers.
+- Now upstream's: `toolPaths` replaces a tool's default entry whole (#1185), so `false` and per-field merging are gone; ZCode and DeepSeek Harness project rules come from the session-start hook (#1219) rather than the project `AGENTS.md`; Windows Codex hooks use upstream's `commandWindows` (#1215), and hooks written by the fork's PowerShell launcher are replaced on the next `teamai pull`; a failed member registration in `teamai init` is a warning (#1267); `teamai push` handles ambiguous skill names through its delivery records.
+
+## 0.26.1 (2026-10-08)
+
+- Windows Codex hooks now use an explicit PowerShell launcher and encode dynamic arguments to preserve paths containing spaces and `$` across PowerShell, cmd.exe and Git Bash.
+- Re-running `teamai hooks inject` replaces all six legacy Codex commands while preserving user hooks and remaining idempotent and removable. Updated commands require normal Codex trust confirmation.
+- Published as `@agent/teamai-cli` to the Gitea package registry.
+
+## Fork changes included in 0.26.1 (upstream 0.26.0 baseline)
+
+- `toolPaths` in a team repo's `teamai.yaml` is now merged over the built-in table per tool and per field (including `userScope`) instead of replacing it. Tools the team omits keep their defaults and keep receiving skills, rules, agents, CLAUDE.md, MCP, and hooks. Tables pinned from older releases pick up newer defaults such as kimi's `agents` and `claudemd`. Teams that relied on omitting a tool or field to disable it must now set it to `false` (for example `kimi: false` or `claude: { rules: false }`); a null entry keeps the default (#14).
+- Team rules, skills, docs and shared-instruction namespaces are scanned in name order instead of filesystem `readdir` order, so the rules block inlined into `.kimi-code/AGENTS.md` (and Hermes `SOUL.md`) is identical on every machine, and when `teamai push` scans team skills, a skill name present in two namespaces resolves to the same one on every machine (for #15).
+- `teamai init` reports a failed member registration as an error, matching its exit code 1, and runs the same Git identity preflight as `teamai members register` before registering, so a missing identity gets the explicit fix instead of git's raw "Author identity unknown" (for #17).
+- The never-implemented `sharing.rules.enforced` key is removed: the usage guide no longer promises rules that members cannot delete, and `teamai init` no longer writes `rules: { enforced: [] }`. Existing `teamai.yaml` files that still set it keep loading and the key is ignored (for #13).
+- The dead `scope` key is removed from the `teamai.yaml` schema, so an old file with `scope: global` (or any other value) loads instead of being rejected as "Team config (teamai.yaml) not found". `teamai doctor` now warns, without failing, about top-level `teamai.yaml` keys it does not recognize (for #19).
+- Skill names duplicated across `skills/` groups, or shared by a top-level and a grouped skill, are an error: no-role `teamai pull` used to install whichever group was scanned last and now skips the ambiguous skill, installs the rest and exits non-zero, tag-subscribed collisions are skipped too, and `teamai push` refuses the ambiguous skill; every error lists all conflicting paths (for #20).
+- Gitea authentication, Kimi CLI integration, inline Codex/ZCode/DSH rules and shared AGENTS.md ownership are carried by this fork.
+- The package is configured as `@agent/teamai-cli` for the Gitea registry.
+
 ## [Unreleased]
 
 ### ✨ Features

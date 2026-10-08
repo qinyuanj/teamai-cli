@@ -7,8 +7,10 @@ TypeScript, Node 20+ (`npm run lint` needs ^20.19 or >=22.12), tsup (ESM), Vites
 ## Git
 
 - Default branch: `main`. Worktrees and PRs based on `origin/main`.
-- PR only to `Tencent/teamai-cli`. Before push, check `git log origin/main..HEAD`; rebase or cherry-pick if unrelated commits appear.
+- Primary fork: GitHub `TLOBillyQ/teamai-cli` (`origin`), an official fork of `Tencent/teamai-cli` (`upstream`). Git remotes, issues, and PRs use GitHub. Gitea hosts the `@agent/teamai-cli` publishing registry only. Before push, check `git log origin/main..HEAD`; rebase or cherry-pick if unrelated commits appear.
 - **Use a worktree**: call `EnterWorktree` before changing code. Do not edit the main working directory.
+- **Fork history**: qinyuanj / 覃远杰's changes stay as a few topic commits, rebased by hand onto the upstream baseline the user names (`upstream/main` for a rolling update, a verified release tag for a release rebuild). Before updating from upstream, rewriting history, or publishing the fork, read `docs/agents/fork-maintenance.md` and follow its `backup/*`, fixup, verification and push-lease steps.
+- **Fork releases** (`@agent/teamai-cli`, Gitea registry): a build exactly on an upstream release keeps its version (e.g. `0.28.0`); a Gitea release between two upstream releases uses the next patch plus `-gitea.N` (e.g. `0.28.1-gitea.0`). Tag the release commit with an annotated `gitea-v<version>`, never `v*`, so it cannot collide with upstream tags. Before publishing, confirm that `npm run build` at the tagged commit is the package being published.
 
 ## Rules
 
@@ -74,3 +76,17 @@ shared state, list every reader and every writer.
   `[P2 non-blocking]` for suggestions that do not block merge, and `[P3 nit]`
   for minor or optional polish, theoretical edge cases, and coverage deferred
   to CI. (In Chinese, `[P1 阻断]` / `[P2 非阻断]` / `[P3 可选]`.)
+
+## Agent skills
+
+### Issue tracker
+
+For issue and PR operations on GitHub `TLOBillyQ/teamai-cli`, use `gh` with an explicit repo target. Read `docs/agents/issue-tracker.md` before creating, fetching, triaging, or closing tickets.
+
+### Triage labels
+
+Default vocabulary: `bug` / `enhancement` (categories) plus `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.

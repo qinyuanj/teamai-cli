@@ -4,10 +4,10 @@ Thanks for your interest in improving TeamAI! This document explains how to get 
 
 ## Development Setup
 
-Fork [`Tencent/teamai-cli`](https://github.com/Tencent/teamai-cli), then clone your fork:
+Clone [`TLOBillyQ/teamai-cli`](https://github.com/TLOBillyQ/teamai-cli), the fork of [`Tencent/teamai-cli`](https://github.com/Tencent/teamai-cli):
 
 ```bash
-git clone https://github.com/<your-user>/teamai-cli.git
+git clone https://github.com/TLOBillyQ/teamai-cli.git
 cd teamai-cli
 git remote add upstream https://github.com/Tencent/teamai-cli.git
 npm install
@@ -91,7 +91,7 @@ Before you change `src/workflow/`, read [docs/dev/workflow-engine.md](../docs/de
 2. Write tests for your change (we target 80%+ coverage).
 3. Run `npx vitest run`, `npx tsc --noEmit` and `npm run lint` — all must pass.
 4. Use conventional commits where possible: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`.
-5. Push the branch to your fork and open a PR against `Tencent/teamai-cli:main`. Describe the problem, the fix, and anything reviewers should pay attention to.
+5. Push the branch and open a PR against `TLOBillyQ/teamai-cli:main`. Describe the problem, the fix, and anything reviewers should pay attention to.
 
 Your PR also gets an informational `Code Erosion` report (SlopCodeBench verbosity/erosion metrics) posted as a comment — it never blocks the merge and is just there to flag creeping complexity. See [docs/dev/ci-code-erosion.md](../docs/dev/ci-code-erosion.md).
 
@@ -120,7 +120,7 @@ Workers share the prepared `dist/` and OpenCode binary: never rebuild or reinsta
 
 ## Bug Reports & Feature Requests
 
-Please file issues at [github.com/Tencent/teamai-cli/issues](https://github.com/Tencent/teamai-cli/issues). Include:
+Please file issues at [github.com/TLOBillyQ/teamai-cli/issues](https://github.com/TLOBillyQ/teamai-cli/issues). Include:
 
 - What you tried to do
 - What happened (error output, stack trace)
