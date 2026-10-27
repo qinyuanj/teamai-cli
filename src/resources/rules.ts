@@ -1034,6 +1034,10 @@ export class RulesHandler extends ResourceHandler {
       const writing = wanted !== null;
       // One tool's failure leaves the others' files to be written.
       try {
+        // Retire the pre-0.27.0 rules block from the same file: the generic
+        // legacy cleanup skips a tool's own blocks file outside `claudemd`, so
+        // an upgraded install would otherwise keep the stale rules forever.
+        await removeClaudeMdSection(file, TEAMAI_RULES_START, TEAMAI_RULES_END, { deleteIfEmpty: true });
         if (wanted !== null) {
           await injectClaudeMdSection(file, TEAMAI_TEAM_RULES_START, TEAMAI_TEAM_RULES_END, wanted);
         } else {

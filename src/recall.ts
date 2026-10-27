@@ -7,7 +7,7 @@ import type { BuildIndexOptions, SearchResult, UnreadableFile } from './utils/se
 import { ensureDir, pathExists } from './utils/fs.js';
 import { log } from './utils/logger.js';
 import type { GlobalOptions, SearchIndex, LocalConfig, KnowledgeDomain } from './types.js';
-import { getProjectSearchIndexPath, getUserSearchIndexPath, getVotesDir, installScopeName } from './types.js';
+import { getProjectSearchIndexPath, getUserSearchIndexPath, getVotesDir, installScopeName, TEAMAI_RECALL_OUTPUT_START, TEAMAI_RECALL_OUTPUT_END } from './types.js';
 import { queryCodeKnowledge } from './code-knowledge-recall.js';
 import type { SourceAnchor } from './code-knowledge-recall.js';
 import { annotateCodebaseSourceFreshness } from './codebase-freshness.js';
@@ -227,7 +227,7 @@ function voteKey(result: SearchResult): string {
  */
 export function formatResults(results: ScopedSearchResult[], runId?: string): string {
   const lines: string[] = [];
-  lines.push(`--- [teamai:recall:start] --- (${results.length} result${results.length !== 1 ? 's' : ''})${runId ? ` run=${runId}` : ''}`);
+  lines.push(`${TEAMAI_RECALL_OUTPUT_START} (${results.length} result${results.length !== 1 ? 's' : ''})${runId ? ` run=${runId}` : ''}`);
   lines.push('');
 
   for (let i = 0; i < results.length; i++) {
@@ -287,7 +287,7 @@ export function formatResults(results: ScopedSearchResult[], runId?: string): st
     lines.push('');
   }
 
-  lines.push('--- [teamai:recall:end] ---');
+  lines.push(TEAMAI_RECALL_OUTPUT_END);
   lines.push('');
   lines.push('The above comes from the team knowledge base and is for reference only. Use the Read tool to open the listed files for details.');
   return lines.join('\n');
