@@ -36,6 +36,8 @@ Verification on the final history (WSL, Node 24):
 - `npx vitest run`: 17658 passed, 15 failed, 57 skipped (596 files). The 15 (Cursor stores, team env shell profiles, Git discovery, `session-push`, submodule checkouts) are the same 15 that fail on the plain `v0.28.1` tree in this environment. `session-scoring`, `workflow-reconciliation` and `workflow-settle-cost` failed in one earlier full run only, and pass when their files run alone.
 - Real CLI, after `npm run build`: `kimi-rules` and `skill-selection` e2e passed 5 tests (Kimi project delivery and uninstall; skill-name collisions with the git, gitlab, github and gitea providers). The packed `@agent/teamai-cli-0.28.1.tgz`, installed into an empty prefix, prints `0.28.1` and lists `gitea` in `init --provider`.
 
+The rebuilt history was pushed to `qinyuanj/teamai-cli` `main` with a force-with-lease, together with the backup branch. `@agent/teamai-cli@0.28.1` was published to the Gitea registry on 2026-10-28 from `0087496f` (annotated tag `gitea-v0.28.1`, pushed to GitHub), after `npm run build` at that commit; the registry `dist.shasum` (`7761c2d1`) matches the tarball packed from it, and `npm exec --package=@agent/teamai-cli@0.28.1 -- teamai --version` prints `0.28.1`. Publishing used the `GITEA_TOKEN` environment variable through a temporary `--userconfig`, not a token written to `~/.npmrc`.
+
 ## 0.28.0 rebuild
 
 The local rebuild uses the official upstream `v0.28.0` commit `b5b35749`, excluding commits after that tag. The previous fork history is retained on `backup/fork-before-0.28.0-20261027-abb2241`; the first force-push lease was `origin/main` = `abb22415`.
