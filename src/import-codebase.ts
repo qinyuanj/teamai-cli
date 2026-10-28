@@ -83,7 +83,7 @@ function keepEnrichedComponents(manifests: { published: unknown; staged: unknown
   };
 }
 
-const PROVIDER_SLUG_PREFIXES = ['github__', 'gitlab__', 'tgit__'] as const;
+const PROVIDER_SLUG_PREFIXES = ['github__', 'gitlab__', 'gitea__', 'tgit__'] as const;
 
 /**
  * The source a `source-manifest.json` names: a repository, or for a checkout

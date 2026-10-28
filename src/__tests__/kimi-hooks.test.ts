@@ -16,6 +16,7 @@ import {
   injectKimiHooks,
   removeKimiHooks,
   hasKimiTeamaiHooks,
+  reconcileKimiHooks,
   KIMI_HOOK_COMMAND_PREFIX,
 } from '../kimi-hooks.js';
 import { injectHooksToAllTools, reconcileHooksToAllTools } from '../hooks.js';
@@ -75,6 +76,16 @@ describe('getKimiHome', () => {
     expect(getKimiHome()).toBe(path.join(tmpDir, '.kimi-code'));
   });
 
+  it('follows the home recorded in ~/.teamai/tool-homes.json when the shell does not move it', () => {
+    const moved = path.join(tmpDir, 'kimi-moved');
+    fs.mkdirSync(path.join(tmpDir, '.teamai'));
+    fs.writeFileSync(path.join(tmpDir, '.teamai', 'tool-homes.json'), JSON.stringify({ kimi: moved }));
+    vi.stubEnv('KIMI_CODE_HOME', '');
+    vi.stubEnv('HOME', tmpDir);
+    vi.stubEnv('USERPROFILE', tmpDir);
+    expect(getKimiHome()).toBe(moved);
+  });
+
   it('getKimiConfigPath points at <home>/config.toml', () => {
     expect(getKimiConfigPath()).toBe(configPath());
   });
@@ -112,6 +123,28 @@ describe('buildKimiHookEntries', () => {
       { event: 'PostToolUse', matcher: 'TodoList', command: 'teamai hook-dispatch post-tool-use --tool kimi --matcher TodoList', timeout: 3 },
       { event: 'UserPromptSubmit', command: 'teamai hook-dispatch prompt-submit --tool kimi', timeout: 10 },
     ]);
+  });
+});
+
+// ─── reconcile ────────────────────────────────────────────────────────────────
+
+describe('reconcileKimiHooks', () => {
+  it('accepts an injection that is already in place', async () => {
+    await injectKimiHooks();
+    await expect(reconcileKimiHooks('injection')).resolves.toBeUndefined();
+  });
+
+  it('throws when the config cannot take the hooks', async () => {
+    fs.writeFileSync(configPath(), 'hooks = []\n');
+    await expect(reconcileKimiHooks('injection')).rejects.toThrow(/did not take effect/);
+    expect(readConfig()).toBe('hooks = []\n');
+  });
+
+  it('throws when teamai entries are left in a config that does not parse', async () => {
+    const broken = '[[hooks]]\ncommand = "teamai hook-dispatch stop --tool kimi"\nevent = \n';
+    fs.writeFileSync(configPath(), broken);
+    await expect(reconcileKimiHooks('removal')).rejects.toThrow(/did not take effect/);
+    expect(readConfig()).toBe(broken);
   });
 });
 

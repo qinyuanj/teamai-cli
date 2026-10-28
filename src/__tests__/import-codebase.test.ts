@@ -317,9 +317,8 @@ describe('importCodebase: the extraction every import source shares', () => {
     expect(await fs.readFile(path.join(evidence, 'docs', 'curated.md'), 'utf8')).toBe('# curated\n');
   });
 
-  it('keeps curated docs when older evidence has no sidecar and the slug names the repo', async () => {
+  it.each(['github__acme__svc', 'gitea__acme__svc'])('keeps curated docs when older evidence has no sidecar and the slug names the repo (%s)', async (slug) => {
     const repo = await makeRepo(root, 'svc', 'export function greet() { return "hi"; }\n');
-    const slug = 'github__acme__svc';
     await run(repo, slug);
     const evidence = path.join(wikiRoot, 'evidence', 'code', slug);
     await fs.outputFile(path.join(evidence, 'docs', 'curated.md'), '# curated\n');

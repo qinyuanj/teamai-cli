@@ -14,7 +14,9 @@ know Git** — never explain branches, commits or clones.
 
 ```bash
 node --version      # must be >= 20
-teamai --version    # install once with: npm install -g teamai-cli
+npm config set @agent:registry http://lzxsvn:3000/api/packages/agent/npm/
+npm install -g @agent/teamai-cli
+teamai --version
 ```
 
 Then pick the flow. A user **setting up a new team** becomes its admin and creates
@@ -32,7 +34,7 @@ is missing.
 | Publish one skill or contribute a doc                                        | `"$(teamai skill path core)/references/contribute-member.md"` |
 | Anything that breaks along the way                                           | `"$(teamai skill path core)/references/troubleshooting.md"` |
 
-Supported Git providers are Tencent TGit, GitHub, GitLab and CNB;
+Supported Git providers are Tencent TGit, GitHub, GitLab, Gitea and CNB;
 `{SKILL_DIR}/references/setup-admin.md` carries the detection probe, the sign-in
 and create-repo URLs, and the per-provider caveats, and points at
 `{SKILL_DIR}/references/provider-tgit.md` for everything TGit-specific.

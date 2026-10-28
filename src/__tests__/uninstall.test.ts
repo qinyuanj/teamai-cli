@@ -952,7 +952,7 @@ describe('uninstall', () => {
     if (legacy) expect(await actualHooks.hasTeamaiHooks(projectHooks, tool)).toBe(false);
   });
 
-  it.each(['pi', 'omp', 'hermes', 'codex', 'opencode'])('keeps global %s delivery and names it with the command that removes it', async (tool) => {
+  it.each(['pi', 'omp', 'hermes', 'codex', 'opencode', 'kimi'])('keeps global %s delivery and names it with the command that removes it', async (tool) => {
     const homeDir = path.join(tmpDir, 'home');
     const projectRoot = path.join(tmpDir, 'only-project');
     const repoPath = path.join(projectRoot, '.teamai', 'team-repo');
@@ -973,6 +973,11 @@ describe('uninstall', () => {
     } else if (tool === 'opencode') {
       kept = path.join(homeDir, '.config', 'opencode', 'plugin', 'teamai-hooks.ts');
       await fse.outputFile(kept, '// [teamai] hooks plugin');
+    } else if (tool === 'kimi') {
+      vi.stubEnv('KIMI_CODE_HOME', path.join(homeDir, '.kimi-code'));
+      const { injectKimiHooks, getKimiConfigPath } = await import('../kimi-hooks.js');
+      await injectKimiHooks();
+      kept = getKimiConfigPath();
     } else if (tool === 'hermes') {
       const { injectHermesHooks, getInstructionsPluginDir } = await import('../hermes-hooks.js');
       await injectHermesHooks();
@@ -995,6 +1000,7 @@ describe('uninstall', () => {
 
     expect(await fse.pathExists(kept)).toBe(true);
     if (tool === 'codex') expect(await actualHooks.hasTeamaiHooks(kept, 'codex')).toBe(true);
+    if (tool === 'kimi') expect(await (await import('../kimi-hooks.js')).hasKimiTeamaiHooks()).toBe(true);
     const summary = printed.join('\n');
     expect(summary).toContain(`     ${kept}`);
     expect(summary).toContain('run `teamai hooks remove` here first');

@@ -23,7 +23,7 @@
 import path from 'node:path';
 import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
 import { BUILTIN_HOOK_SPECS } from './builtin-hooks.js';
-import { getUserHome } from './utils/home.js';
+import { toolHome } from './tool-home.js';
 import { readFileSafe, writeFile } from './utils/fs.js';
 import { log } from './utils/logger.js';
 
@@ -50,15 +50,12 @@ export interface KimiHookEntry {
 }
 
 /**
- * Resolve the Kimi Code CLI home directory: `KIMI_CODE_HOME` when set,
- * otherwise `~/.kimi-code` (mirrors kimi's own resolution).
+ * Resolve the Kimi Code CLI home directory as every other tool's: the home
+ * recorded in `~/.teamai/tool-homes.json`, else `KIMI_CODE_HOME`, else
+ * `~/.kimi-code`. A shell without the variable still finds a moved home.
  */
 export function getKimiHome(): string {
-  const fromEnv = process.env.KIMI_CODE_HOME;
-  if (fromEnv && fromEnv.trim() !== '') {
-    return path.resolve(fromEnv);
-  }
-  return path.join(getUserHome(), '.kimi-code');
+  return toolHome('kimi');
 }
 
 /** Absolute path of kimi's user-level config.toml. */
@@ -216,4 +213,16 @@ export async function hasKimiTeamaiHooks(): Promise<boolean> {
  */
 export function removeKimiHooks(): Promise<boolean> {
   return updateKimiHooks('removal');
+}
+
+/**
+ * Inject or remove, then check the end state: an unchanged file is fine only
+ * when it already holds (or no longer holds) teamai's entries. Throws when a
+ * config teamai cannot safely edit leaves the hooks in the wrong state.
+ */
+export async function reconcileKimiHooks(action: 'injection' | 'removal'): Promise<void> {
+  await updateKimiHooks(action);
+  if (await hasKimiTeamaiHooks() !== (action === 'injection')) {
+    throw new Error(`teamai Kimi Code hook ${action} did not take effect in ${getKimiConfigPath()}`);
+  }
 }

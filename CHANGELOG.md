@@ -2,9 +2,9 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-## Fork 0.28.0 (unreleased)
+## Fork 0.28.1 (unreleased)
 
-Rebuilt on the official upstream `v0.28.0` release (`b5b3574`). Where upstream now covers a fork change, upstream's version is kept.
+Rebuilt on the official upstream `v0.28.1` release (`0df524c`). Where upstream now covers a fork change, upstream's version is kept.
 
 - Kept: Gitea provider and its onboarding (the team repo's declared `provider: gitea` wins over host detection; a missing Git identity skips member registration with the fix), Kimi Code CLI (team rules inline in `.kimi-code/AGENTS.md` in both scopes), the `@agent/teamai-cli` package, deterministic directory scans, duplicate skill names skipped by `pull` and reported by `doctor`, removal of the dead `sharing.rules.enforced` and `scope` keys with a `doctor` warning for unknown keys, migration of the pre-0.27 `[teamai:rules]` block in user rules files, and shared recall output markers.
 - Now upstream's: `toolPaths` replaces a tool's default entry whole (#1185), so `false` and per-field merging are gone; ZCode and DeepSeek Harness project rules come from the session-start hook (#1219) rather than the project `AGENTS.md`; Windows Codex hooks use upstream's `commandWindows` (#1215), and hooks written by the fork's PowerShell launcher are replaced on the next `teamai pull`; a failed member registration in `teamai init` is a warning (#1267); `teamai push` handles ambiguous skill names through its delivery records.

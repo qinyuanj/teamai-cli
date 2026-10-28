@@ -85,7 +85,9 @@ registry の読み取りは匿名で、インストールに token は不要で�
 
 ### チーム管理者 / 個人利用
 
-Git ホスト（GitHub、GitLab、GitCode、CNB、TGit、またはプライベート Git サービス）に共有リポジトリを作成します。メンバーにはブランチへの push 権限を付け、デフォルトブランチは保護したままにします。その後 `teamai init https://github.com/your-org/your-repo` を実行します。
+Git ホスト（GitHub、GitLab、GitCode、CNB、TGit、Gitea、またはプライベート Git サービス）に共有リポジトリを作成します。メンバーにはブランチへの push 権限を付け、デフォルトブランチは保護したままにします。その後 `teamai init https://github.com/your-org/your-repo` を実行します。
+
+> **Gitea:** `teamai init` の前に `GITEA_TOKEN`（Gitea access token）を設定します。管理者の初回 init では `GITEA_URL`（例: `http://lzxsvn:3000`）も必要です。これにより新しい `teamai.yaml` に `provider: gitea` が記録されます。その後メンバーは `GITEA_URL` を省略できます。init は宣言された provider を読み、リポジトリ URL から Gitea インスタンスを取得します。token がないか無効な場合、init は Git の `user.name` でメンバーを登録せず、エラーで終了します。
 
 > **まだチームリポジトリがない場合は？** 本番向けの skills、rules、review agents が入ったテンプレートから始められます。[teamai-hub](https://github.com/teamai-hub) org を開き、**Fork** してから、新しいリポジトリに対して `teamai init` を実行してください。
 
@@ -149,7 +151,7 @@ Git を基盤に、3 層の能力を構築します：
     <tr><td>ZCode</td><td align="center">✓</td><td align="center">✓¹</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓²</td><td align="center">—</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">—</td></tr>
     <tr><td>JoyCode</td><td align="center">✓</td><td align="center">✓¹</td><td align="center">✓</td><td align="center">✓</td><td align="center">—</td><td align="center">—</td><td align="center">✓</td><td align="center">✓</td><td align="center">—</td><td align="center">✓</td><td align="center">—</td><td align="center">—</td><td align="center">—</td></tr>
     <tr><td>Muse Code</td><td align="center">✓</td><td align="center">✓¹</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">—</td></tr>
-    <tr><td>Kimi Code CLI</td><td align="center">✓</td><td align="center">✓¹</td><td align="center">—</td><td align="center">✓</td><td align="center">✓</td><td align="center">—</td><td align="center">—</td><td align="center">—</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">—</td><td align="center">—</td></tr>
+    <tr><td>Kimi Code CLI</td><td align="center">✓</td><td align="center">✓¹</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">—</td><td align="center">—</td><td align="center">—</td><td align="center">—</td><td align="center">✓</td><td align="center">✓</td><td align="center">—</td><td align="center">—</td></tr>
   </tbody>
 </table>
 

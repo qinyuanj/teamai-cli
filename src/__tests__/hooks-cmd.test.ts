@@ -702,6 +702,31 @@ describe('hooksList', () => {
         expect(text).not.toContain('no settings configured');
     });
 
+    it('reports Kimi Code hooks by its user config.toml', async () => {
+        const home = await fse.mkdtemp(path.join(os.tmpdir(), 'teamai-kimi-list-'));
+        await fse.outputFile(path.join(home, '.kimi-code', 'config.toml'),
+            '[[hooks]]\nevent = "SessionStart"\ncommand = "teamai hook-dispatch session-start --tool kimi"\n');
+        const restoreHome = mockHome(home);
+        const out: string[] = [];
+        const consoleLog = vi.spyOn(console, 'log').mockImplementation((m?: unknown) => { out.push(String(m)); });
+        mockedAutoDetectInit.mockResolvedValue({
+            localConfig: mockLocalConfig,
+            teamConfig: { toolPaths: { kimi: { skills: '.kimi-code/skills' } } },
+        });
+
+        try {
+            await hooksList({});
+        } finally {
+            restoreHome();
+            consoleLog.mockRestore();
+            await fse.remove(home);
+        }
+
+        const text = out.join('\n');
+        expect(text).toContain('~/.kimi-code/config.toml');
+        expect(text).not.toContain('no settings configured');
+    });
+
     it('checks tool status against the overridden built-in set', async () => {
         // Reconciliation applies `builtin.disabled` when writing, so a status
         // check that still expects the disabled hook reads `missing` forever.

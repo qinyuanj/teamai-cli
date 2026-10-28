@@ -24,7 +24,8 @@ flow — see `{SKILL_DIR}/references/setup-admin.md` — not this one.)
 ## Step 1 — Install and verify
 
 ```bash
-npm install -g teamai-cli
+npm config set @agent:registry http://lzxsvn:3000/api/packages/agent/npm/
+npm install -g @agent/teamai-cli
 teamai --version
 ```
 
@@ -68,6 +69,11 @@ Match the login to the URL's host (do NOT create a second repo):
   the token: add `--provider git` to the `init` in Step 4. Git then uses their
   existing SSH key or credential helper, and `push` leaves the MR for them to open
   on the web.
+- **A Gitea URL** → set `GITEA_TOKEN` to an access token with `repo` scope before
+  `teamai init`. When the team repo declares `provider: gitea`, init derives the
+  instance from an HTTP(S) repo URL, so `GITEA_URL` is normally unnecessary; set its
+  base URL for an SSH repo URL or to override the instance. A missing or invalid
+  token makes init fail instead of registering the Git `user.name`.
 - **Other Git hosts, including Azure Repos** → use the existing Git credential
   helper or SSH key. Keep the clone path as provided, including whether it ends
   in `.git`; do not embed HTTPS credentials in the URL.

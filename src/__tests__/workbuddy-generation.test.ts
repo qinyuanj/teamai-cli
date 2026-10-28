@@ -177,7 +177,7 @@ describe('doctor on a WorkBuddy member with only the 5.7+ root', () => {
     };
     teamConfig = {
       team: 'test', description: '', repo: 'owner/repo', provider: 'git', reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: false } },
+      sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: false } },
       toolPaths: { workbuddy: DEFAULT_TOOL_PATHS.workbuddy },
     };
     vi.mocked(loadLocalConfig).mockResolvedValue(localConfig);
@@ -255,7 +255,7 @@ describe('rulesReceivingTools', () => {
   });
   const teamConfig = (toolPaths: TeamaiConfig['toolPaths']): TeamaiConfig => ({
     team: 'test', description: '', repo: 'owner/repo', provider: 'git', reviewers: [],
-    sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: false } },
+    sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: false } },
     toolPaths,
   });
 

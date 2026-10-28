@@ -8,7 +8,8 @@ Run the commands yourself. Only stop to ask when a step says "ASK".
 ## Step 1 — Install and verify
 
 ```bash
-npm install -g teamai-cli
+npm config set @agent:registry http://lzxsvn:3000/api/packages/agent/npm/
+npm install -g @agent/teamai-cli
 teamai --version
 ```
 
@@ -28,12 +29,13 @@ through these sub-steps **in order**:
 on this machine — see `{SKILL_DIR}/references/provider-tgit.md` ("Probe
 reachability") for the one-line `x-env: tgit` check. If it says `tgit: OK`, **list Tencent TGit first** and
 prefer it. Then ask: *"Have you heard of / do you have an account on any of these —
-Tencent TGit, GitHub, GitLab, or CNB (cnb.cool)?"*
+Tencent TGit, GitHub, GitLab, Gitea, or CNB (cnb.cool)?"*
 
 - **Tencent TGit** — https://git.woa.com (Tencent-internal only; shown
   first when the probe above says `tgit: OK`)
 - **GitHub** — https://github.com
 - **GitLab** — https://gitlab.com (or a self-hosted company GitLab)
+- **Gitea** — a self-hosted instance; ask for its base URL
 - **CNB** — https://cnb.cool
 
 If they name one, use that platform and go to sub-step 2c.
@@ -70,6 +72,7 @@ the repository, then continue to the next step:
 | Tencent TGit | https://git.woa.com | https://git.woa.com/projects/new |
 | GitHub   | https://github.com/login     | https://github.com/new             |
 | GitLab   | https://gitlab.com/users/sign_in | https://gitlab.com/projects/new |
+| Gitea    | `<GITEA_URL>/user/login`         | `<GITEA_URL>/repo/create` |
 | CNB      | https://cnb.cool             | https://cnb.cool/new/repos (org first: https://cnb.cool/new/groups) |
 
 > **Tencent TGit:** don't send the user to the browser to create the repo —
@@ -135,6 +138,16 @@ with `gh auth status` before continuing.
 
 (Headless/CI only: skip the interactive login and pre-set `GITHUB_TOKEN` — a token
 with `repo` scope — instead.)
+
+### Gitea (self-hosted)
+
+Set the instance base URL and an access token with `repo` scope. The admin's first
+init needs both so the new `teamai.yaml` records `provider: gitea`:
+```bash
+export GITEA_URL=https://gitea.example.com
+read -rs GITEA_TOKEN && export GITEA_TOKEN   # paste when prompted; not echoed
+```
+Run `unset GITEA_TOKEN` when `teamai init` is done.
 
 ### GitLab (gitlab.com)
 

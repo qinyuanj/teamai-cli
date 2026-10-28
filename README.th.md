@@ -85,7 +85,9 @@ npm install -g @agent/teamai-cli
 
 ### ผู้ดูแลทีม / ผู้ใช้คนเดียว
 
-สร้างรีโปที่ใช้ร่วมกันบน Git host (GitHub, GitLab, GitCode, CNB, TGit หรือบริการ Git ส่วนตัว) ให้สมาชิกสิทธิ์ push สาขา และปล่อยให้สาขาหลักถูกป้องกันไว้ จากนั้นรัน `teamai init https://github.com/your-org/your-repo`
+สร้างรีโปที่ใช้ร่วมกันบน Git host (GitHub, GitLab, GitCode, CNB, TGit, Gitea หรือบริการ Git ส่วนตัว) ให้สมาชิกสิทธิ์ push สาขา และปล่อยให้สาขาหลักถูกป้องกันไว้ จากนั้นรัน `teamai init https://github.com/your-org/your-repo`
+
+> **Gitea:** ตั้งค่า `GITEA_TOKEN` (Gitea access token) ก่อนรัน `teamai init` ผู้ดูแลที่รัน init ครั้งแรกต้องตั้งค่า `GITEA_URL` ด้วย (เช่น `http://lzxsvn:3000`) เพื่อให้ `teamai.yaml` ใหม่บันทึก `provider: gitea` หลังจากนั้นสมาชิกไม่จำเป็นต้องตั้งค่า `GITEA_URL` เพราะ init จะอ่าน provider ที่ประกาศไว้และใช้ Gitea instance จาก URL ของรีโป หากไม่มี token หรือ token ใช้ไม่ได้ init จะจบด้วยข้อผิดพลาดแทนที่จะลงทะเบียนสมาชิกด้วย Git `user.name`
 
 > **ยังไม่มีรีโปของทีม?** เริ่มจากเทมเพลตที่มี Skills, Rules และ review agents พร้อมใช้จริงอยู่แล้ว เปิดดู org [teamai-hub](https://github.com/teamai-hub) กด **Fork** แล้วรัน `teamai init` กับรีโปใหม่ของคุณ
 
@@ -149,7 +151,7 @@ teamai init http://lzxsvn:3000/agent/yourrepo --scope user
     <tr><td>ZCode</td><td align="center">✓</td><td align="center">✓¹</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓²</td><td align="center">—</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">—</td></tr>
     <tr><td>JoyCode</td><td align="center">✓</td><td align="center">✓¹</td><td align="center">✓</td><td align="center">✓</td><td align="center">—</td><td align="center">—</td><td align="center">✓</td><td align="center">✓</td><td align="center">—</td><td align="center">✓</td><td align="center">—</td><td align="center">—</td><td align="center">—</td></tr>
     <tr><td>Muse Code</td><td align="center">✓</td><td align="center">✓¹</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">—</td></tr>
-    <tr><td>Kimi Code CLI</td><td align="center">✓</td><td align="center">✓¹</td><td align="center">—</td><td align="center">✓</td><td align="center">✓</td><td align="center">—</td><td align="center">—</td><td align="center">—</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">—</td><td align="center">—</td></tr>
+    <tr><td>Kimi Code CLI</td><td align="center">✓</td><td align="center">✓¹</td><td align="center">✓</td><td align="center">✓</td><td align="center">✓</td><td align="center">—</td><td align="center">—</td><td align="center">—</td><td align="center">—</td><td align="center">✓</td><td align="center">✓</td><td align="center">—</td><td align="center">—</td></tr>
   </tbody>
 </table>
 

@@ -94,7 +94,7 @@ describe('checkout preparation runs postDeploy (#1424)', () => {
     vi.mocked(getHeadRev).mockResolvedValue('abc1234');
     const teamConfig: TeamaiConfig = {
       team: 'test', description: '', repo: 'https://git.example.com/test/repo.git', provider: 'git', reviewers: [],
-      sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: 'docs' }, env: { injectShellProfile: true } },
+      sharing: { skills: {}, docs: { localDir: 'docs' }, env: { injectShellProfile: true } },
       toolPaths: { claude: { skills: '.claude/skills', rules: '.claude/rules' } },
       scripts: { postDeploy: { path: 'post-deploy.mjs' } },
     };

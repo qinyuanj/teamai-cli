@@ -2921,10 +2921,10 @@ const reportedMissingKimiHomes = new Set<string>();
  * committed by single-repo mode) does not mean this member uses Kimi Code.
  */
 async function injectKimiHooksOrWarn(explicitAgents: readonly string[] | undefined): Promise<void> {
-  const { getKimiHome, injectKimiHooks } = await import('./kimi-hooks.js');
+  const { getKimiHome, reconcileKimiHooks } = await import('./kimi-hooks.js');
   const kimiHome = getKimiHome();
   if (await pathExists(kimiHome)) {
-    await injectKimiHooks();
+    await reconcileKimiHooks('injection');
     return;
   }
   if (!explicitAgents?.includes('kimi') || reportedMissingKimiHomes.has(kimiHome)) {
@@ -3304,13 +3304,14 @@ export async function reconcileHooksToAllTools(
       if (opts.settingsOnly) continue;
       try {
         if (opts.removeAll) {
-          const { removeKimiHooks } = await import('./kimi-hooks.js');
-          await removeKimiHooks();
+          const { reconcileKimiHooks } = await import('./kimi-hooks.js');
+          await reconcileKimiHooks('removal');
         } else {
           await injectKimiHooksOrWarn(opts.explicitAgents ?? opts.filterAgents);
         }
       } catch (e) {
         log.warn(`Failed to reconcile Kimi Code hooks: ${(e as Error).message}`);
+        opts.unwritten?.push(tool);
       }
       continue;
     }

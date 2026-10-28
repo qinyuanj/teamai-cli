@@ -36,7 +36,7 @@ describe('env listing command options (#1432)', () => {
       localConfig,
       teamConfig: {
         team: 'test', description: '', repo: localConfig.repo.remote, provider: 'git', reviewers: [],
-        sharing: { skills: {}, rules: { enforced: [] }, docs: { localDir: '' }, env: { injectShellProfile: true } },
+        sharing: { skills: {}, docs: { localDir: '' }, env: { injectShellProfile: true } },
         toolPaths: {},
       },
     });

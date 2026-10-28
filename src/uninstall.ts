@@ -481,8 +481,12 @@ async function discoverToolResources(
   if (tool === 'kimi') {
     // Kimi Code CLI keeps hooks in its user-level config.toml regardless of
     // scope; list it only when teamai entries are actually present.
+    // Other installs share that file: only a user-scope uninstall takes the entries (#945).
     const { getKimiConfigPath, hasKimiTeamaiHooks } = await import('./kimi-hooks.js');
-    if (await hasKimiTeamaiHooks()) res.kimiConfigPath = getKimiConfigPath();
+    if (await hasKimiTeamaiHooks()) {
+      if (globalAdapters) res.kimiConfigPath = getKimiConfigPath();
+      else res.keptGlobal.push(getKimiConfigPath());
+    }
   } else if (toolPath.hooks) {
     const hooksPath = path.join(baseDir, toolPath.hooks);
     const teamOnly = tool === 'copilot' && scope === 'project';
@@ -2211,9 +2215,10 @@ async function executeRemoval(
   // user-level config.toml, leaving user entries and the rest of the document.
   if (plan.kimiConfigPath) {
     try {
-      const { removeKimiHooks } = await import('./kimi-hooks.js');
-      await removeKimiHooks();
+      const { reconcileKimiHooks } = await import('./kimi-hooks.js');
+      await reconcileKimiHooks('removal');
     } catch (e) {
+      hooksLeft.push({ what: plan.kimiConfigPath, tool: 'kimi' });
       log.warn(`Failed to remove Kimi Code hooks from ${plan.kimiConfigPath}: ${(e as Error).message}`);
     }
   }
