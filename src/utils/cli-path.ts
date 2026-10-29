@@ -58,6 +58,8 @@ function whereOnWindows(cmd: string): string | null {
       stdio: ['ignore', 'pipe', 'ignore'],
       shell: false,
       timeout: CLI_DETECT_TIMEOUT_MS,
+      // 后台钩子进程（score-sessions）没有控制台，不隐藏则每次 where 都闪一个终端窗口
+      windowsHide: true,
     });
     const p = pickWindowsCommand(out);
     return p !== null && existsSync(p) ? p : null;
