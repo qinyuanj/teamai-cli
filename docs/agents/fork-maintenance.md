@@ -26,6 +26,14 @@ The inherited public npm release workflow is reserved for `Tencent/teamai-cli`; 
 
 Build fork packages from the validated GitHub fork history. Publishing credentials and registry configuration remain specific to Gitea; package publishing does not require a Gitea Git remote.
 
+A `-gitea.N` version is a prerelease. Publish it with `--tag latest`: npm refuses an untagged prerelease publish, and auto-update reads the `latest` dist-tag.
+
+## 0.28.2-gitea.0 release
+
+Fixes on top of 0.28.1 (PR #9): the session-start `score-sessions` worker ran `where` without `windowsHide`, which flashed about ten Windows Terminal windows per session start; and `compareVersions` now orders prereleases with the same core, so `-gitea.N` installs auto-update to `-gitea.N+1`.
+
+`@agent/teamai-cli@0.28.2-gitea.0` was published to the Gitea registry on 2026-10-29 from `b4eacce9` (annotated tag `gitea-v0.28.2-gitea.0`, pushed to GitHub), after `npm run build` at that commit, with `--tag latest`. The registry `dist.shasum` (`e8aeece6`) matches the tarball packed from it, `npm exec --package=@agent/teamai-cli@0.28.2-gitea.0 -- teamai --version` prints `0.28.2-gitea.0`, and an installed 0.28.1 with no cached check reports `Update available: v0.28.1 → v0.28.2-gitea.0`. Publishing used `GITEA_TOKEN` through a temporary `--userconfig`.
+
 ## 0.28.1 rebuild
 
 The local rebuild uses the official upstream `v0.28.1` commit `0df524c1`. The previous fork history is retained on `backup/fork-before-0.28.1-20261028-7699e222`; the force-push lease is `origin/main` = `7699e222`. The topic commits replay as before; upstream's new tool-descriptor fields (hooks, sessions, features) and README matrix columns are filled in for Kimi, and the fixes 0.28.1 needed sit in one `fix(fork): integrate upstream 0.28.1` commit on top (Git 2.43 here has no non-interactive autosquash).
