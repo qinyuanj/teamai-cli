@@ -190,6 +190,25 @@ export function compareVersions(a: string, b: string): number {
   // Numeric cores are equal — prerelease is lower than release (semver §11)
   if (preA && !preB) return -1;
   if (!preA && preB) return 1;
+  if (!preA || !preB) return 0;
+
+  // Both prereleases: identifier by identifier, numeric ones numerically and
+  // below alphanumeric ones, a shorter prefix lower (semver §11.4), so a
+  // `-gitea.0` install sees `-gitea.1` as an update.
+  const idsA = preA.split('.');
+  const idsB = preB.split('.');
+  for (let i = 0; i < Math.max(idsA.length, idsB.length); i++) {
+    const ia = idsA[i];
+    const ib = idsB[i];
+    if (ia === undefined) return -1;
+    if (ib === undefined) return 1;
+    if (ia === ib) continue;
+    const numA = /^\d+$/.test(ia);
+    const numB = /^\d+$/.test(ib);
+    if (numA && numB) return Number(ia) < Number(ib) ? -1 : 1;
+    if (numA !== numB) return numA ? -1 : 1;
+    return ia < ib ? -1 : 1;
+  }
   return 0;
 }
 

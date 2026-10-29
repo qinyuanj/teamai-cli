@@ -257,8 +257,13 @@ describe('compareVersions', () => {
     expect(compareVersions('1.3.0-alpha.0', '1.3.0')).toBe(-1);
   });
 
-  it('should treat two prereleases with same core as equal (no deep prerelease ordering)', () => {
-    expect(compareVersions('1.2.3-beta.1', '1.2.3-beta.2')).toBe(0);
+  // Fork releases between upstream releases are `-gitea.N`: a client on
+  // `-gitea.0` must see `-gitea.1` as an update.
+  it('should order prereleases with the same core by their identifiers', () => {
+    expect(compareVersions('0.28.2-gitea.0', '0.28.2-gitea.1')).toBe(-1);
+    expect(compareVersions('0.28.2-gitea.10', '0.28.2-gitea.9')).toBe(1);
+    expect(compareVersions('1.2.3-beta.1', '1.2.3-beta.1')).toBe(0);
+    expect(compareVersions('1.2.3-alpha.1', '1.2.3-beta.0')).toBe(-1);
   });
 
   it('should compare prerelease against lower release correctly', () => {
