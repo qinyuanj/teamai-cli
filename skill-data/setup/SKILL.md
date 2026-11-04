@@ -14,7 +14,9 @@ know Git** — never explain branches, commits or clones.
 
 ```bash
 node --version      # must be >= 20
-teamai --version    # install once with: npm install -g teamai-cli
+teamai --version    # install once with the two lines below
+# npm config set @agent:registry http://lzxsvn:3000/api/packages/agent/npm/
+# npm install -g @agent/teamai-cli
 ```
 
 Then pick the flow. A user **setting up a new team** becomes its admin and creates

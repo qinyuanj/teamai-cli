@@ -18,7 +18,7 @@ allowed-tools: Bash(teamai skill:*), Bash(npx teamai-cli skill:*), Bash(teamai w
 
 Make every team AI native — one shared foundation for the skills, rules, docs and env a team works with.
 
-Install: `npm i -g teamai-cli@latest` (Node.js >= 20). If `teamai skill get` is not recognised, the installed CLI predates it; upgrade the same way.
+Install (Node.js >= 20): `npm config set @agent:registry http://lzxsvn:3000/api/packages/agent/npm/`, then `npm i -g @agent/teamai-cli@latest`. If `teamai skill get` is not recognised, the installed CLI predates it; upgrade the same way.
 
 ## Start here
 

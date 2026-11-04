@@ -6,6 +6,7 @@ import { listFilesRecursive, pathExists } from './utils/fs.js';
 import { readSkillDescription } from './agent-skills.js';
 import { log, setStderrOnly } from './utils/logger.js';
 import type { TeamaiInit } from './config.js';
+import { getCurrentPackageName, registryInstallArg } from './package-info.js';
 
 // ─── CLI-served skill content ────────────────────────────
 //
@@ -483,7 +484,9 @@ function notFound(name: string, available: PackagedSkill[]): void {
 
 function rootsMissing(): void {
   diagnostic(`${chalk.red('✖')} Packaged skill content not found.`);
-  diagnostic('  The installed teamai-cli package looks incomplete; reinstall with `npm i -g teamai-cli`.');
+  const pkgName = getCurrentPackageName();
+
+  diagnostic(`  The installed ${pkgName} package looks incomplete; reinstall with \`npm i -g ${pkgName} ${registryInstallArg(pkgName)}\`.`);
   process.exitCode = 1;
 }
 

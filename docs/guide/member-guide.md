@@ -5,7 +5,8 @@
 ## Member Onboarding
 
 ```bash
-npm install -g teamai-cli
+npm config set @agent:registry http://lzxsvn:3000/api/packages/agent/npm/
+npm install -g @agent/teamai-cli
 cd /path/to/my-workspace
 teamai init https://github.com/your-org/your-repo
 ```

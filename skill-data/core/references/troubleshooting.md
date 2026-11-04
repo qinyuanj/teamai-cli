@@ -430,7 +430,7 @@ built-in and enterprise plugins support both OpenCode 1.18.23 (`server`) and V2
   local after an unconfirmed push. Run `teamai pull --verbose` to retry and
   see the cause. A successful report, or a pull after reporting is disabled,
   clears the notice. Disabling reporting keeps the local data.
-- Report unexpected behavior at https://github.com/Tencent/teamai-cli/issues
+- Report unexpected behavior at https://github.com/qinyuanj/teamai-cli/issues
   with the agent name, platform, and the step that failed.
 
 ## "Pull left an instruction file unchanged"

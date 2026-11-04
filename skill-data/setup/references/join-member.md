@@ -24,7 +24,8 @@ flow — see `{SKILL_DIR}/references/setup-admin.md` — not this one.)
 ## Step 1 — Install and verify
 
 ```bash
-npm install -g teamai-cli
+npm config set @agent:registry http://lzxsvn:3000/api/packages/agent/npm/
+npm install -g @agent/teamai-cli
 teamai --version
 ```
 

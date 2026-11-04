@@ -18,41 +18,19 @@ import { askConfirmation, isInteractive } from './utils/prompt.js';
 // so both this module and the provider registry can read package metadata
 // without pulling in update.ts' dependency graph. They are re-exported here
 // for backwards compatibility with existing callers of `./update.js`.
-import { getCurrentVersion, getCurrentPackageName } from './package-info.js';
+import { getCurrentVersion, getCurrentPackageName, resolveRegistryForPackage, registryInstallArg } from './package-info.js';
 
-export { getCurrentVersion, getCurrentPackageName };
+export { getCurrentVersion, getCurrentPackageName, resolveRegistryForPackage, registryInstallArg };
 
 const execFileAsync = promisify(execFile);
 
 // ─── Constants ──────────────────────────────────────────
-
-/** Public npm registry (open-source users). */
-const PUBLIC_REGISTRY = 'https://registry.npmjs.org';
-
-/** Tencent internal tnpm registry (for @tencent/ scoped package). */
-const TNPM_REGISTRY = 'http://r.tnpm.oa.com';
 
 const VERSION_CHECK_TIMEOUT = 5000;
 const INSTALL_TIMEOUT = 60000;
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 
 // ─── Helpers ────────────────────────────────────────────
-
-/**
- * Resolve the npm registry to use for the given package name.
- * Scoped packages under `@tencent/` go to tnpm; everything else to public npm.
- * Honor `TEAMAI_NPM_REGISTRY` env var for manual override (useful for testing
- * or private mirrors).
- */
-export function resolveRegistryForPackage(pkgName: string): string {
-  const override = process.env.TEAMAI_NPM_REGISTRY?.trim();
-
-  if (override) return override;
-
-  if (pkgName.startsWith('@tencent/')) return TNPM_REGISTRY;
-
-  return PUBLIC_REGISTRY;
-}
 
 /**
  * Resolve the npm CLI belonging to the running Node. Bundled runtimes
@@ -962,7 +940,6 @@ export async function doUpdate(runningScope: LocalConfig | null, options?: { for
   // Refuse unsupported install layouts before prompting, so nobody confirms
   // an update that is then skipped.
   const pkgName = getCurrentPackageName();
-  const registry = resolveRegistryForPackage(pkgName);
   const target = resolveInstallPrefix();
 
   if (!target) {
@@ -976,7 +953,7 @@ export async function doUpdate(runningScope: LocalConfig | null, options?: { for
       `Self-update skipped: teamai is running from ${root}, which is not an npm install ` +
       'it can update in place (for example an `npm link` checkout). For a checkout, pull ' +
       'and rebuild it; to switch to the published package, run ' +
-      `"npm install -g ${pkgName} --registry=${registry}".`;
+      `"npm install -g ${pkgName} ${registryInstallArg(pkgName)}".`;
 
     log.warn(message);
     log.persist(message);
@@ -1053,7 +1030,7 @@ export async function doUpdate(runningScope: LocalConfig | null, options?: { for
         ...npm.args,
         'install', '-g', pkgName,
         `--prefix=${target.prefix}`,
-        `--registry=${registry}`,
+        registryInstallArg(pkgName),
       ],
       { timeout: INSTALL_TIMEOUT, windowsHide: true },
     );
