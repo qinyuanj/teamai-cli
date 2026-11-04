@@ -513,24 +513,11 @@ describe('TeamaiConfigSchema with scope', () => {
     repo: 'https://example.com/repo.git',
   };
 
-  it('should accept config without scope (legacy backward compatibility)', () => {
-    const result = TeamaiConfigSchema.parse(baseTeamConfig);
-    expect(result.scope).toBeUndefined();
-  });
-
-  it('should accept scope: "user"', () => {
-    const result = TeamaiConfigSchema.parse({ ...baseTeamConfig, scope: 'user' });
-    expect(result.scope).toBe('user');
-  });
-
-  it('should accept scope: "project"', () => {
-    const result = TeamaiConfigSchema.parse({ ...baseTeamConfig, scope: 'project' });
-    expect(result.scope).toBe('project');
-  });
-
-  it('should reject invalid scope values', () => {
-    expect(() => TeamaiConfigSchema.parse({ ...baseTeamConfig, scope: 'global' })).toThrow();
-    expect(() => TeamaiConfigSchema.parse({ ...baseTeamConfig, scope: 123 })).toThrow();
+  it('loads an old teamai.yaml that still carries scope, and drops the key', () => {
+    for (const scope of ['user', 'project', 'global', 123]) {
+      const result = TeamaiConfigSchema.parse({ ...baseTeamConfig, scope });
+      expect(result).not.toHaveProperty('scope');
+    }
   });
 });
 

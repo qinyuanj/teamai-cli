@@ -60,6 +60,8 @@ function whereOnWindows(cmd: string): string | null {
       stdio: ['ignore', 'pipe', 'ignore'],
       shell: false,
       timeout: CLI_DETECT_TIMEOUT_MS,
+      // Background hook processes (score-sessions) have no console; without this every `where` flashes a terminal window.
+      windowsHide: true,
     });
 
     const p = pickWindowsCommand(out);

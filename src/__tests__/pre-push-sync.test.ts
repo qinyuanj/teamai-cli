@@ -763,6 +763,34 @@ describe('syncTeamUpdatesToLocal — skills', () => {
     expect(content).toBe('v2 namespaced');
   });
 
+  // Pre-push compares a local skill with the copy pull delivers (#1577): with a
+  // role, the active namespace's copy replaces the shared one of its name.
+  it('syncs a same-name skill from the copy pull delivers to this member, not the shared one', async () => {
+    for (const [dir, content] of [['x', 'v2 shared'], ['dev/x', 'v2 dev']] as const) {
+      await fse.ensureDir(path.join(repoPath, 'skills', dir));
+      await fse.writeFile(path.join(repoPath, 'skills', dir, 'SKILL.md'), content);
+    }
+
+    await fse.ensureDir(path.join(repoPath, 'manifest'));
+    await fse.writeFile(path.join(repoPath, 'manifest', 'roles.yaml'), [
+      'version: 1',
+      'roles:',
+      '  - id: platform',
+      '    resources: { knowledge: [], skills: [dev] }',
+      '',
+    ].join('\n'));
+    localConfig = { ...localConfig, primaryRole: 'platform' };
+    const localSkillDir = path.join(homeDir, '.claude/skills', 'x');
+    await fse.ensureDir(localSkillDir);
+    await fse.writeFile(path.join(localSkillDir, 'SKILL.md'), 'v1 dev');
+    mockGetFileContentAtRev.mockImplementation(async (_repo, _rev, file) =>
+      Buffer.from(file.includes('/dev/') ? 'v1 dev' : 'v1 shared'));
+
+    await syncTeamUpdatesToLocal(teamConfig, localConfig, 'abc1234');
+
+    expect(await fse.readFile(path.join(localSkillDir, 'SKILL.md'), 'utf-8')).toBe('v2 dev');
+  });
+
   it('should skip skill dirs that are already identical', async () => {
     const sameContent = 'identical skill content';
     const teamSkillDir = path.join(repoPath, 'skills', 'my-skill');

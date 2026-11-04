@@ -67,6 +67,14 @@ describe('resolveCliPath', () => {
     expect(mockedExecFileSync).toHaveBeenCalledWith('where', ['gh'], expect.anything());
   });
 
+  // A detached hook worker (score-sessions) has no console, so every visible
+  // `where` it starts opens and closes a terminal window on the desktop.
+  it('runs `where` hidden so a console-less hook worker does not flash a window', () => {
+    mockedExecFileSync.mockReturnValue(`${GH_EXE}\r\n`);
+    resolveCliPath('gh', 'win32');
+    expect(mockedExecFileSync).toHaveBeenCalledWith('where', ['gh'], expect.objectContaining({ windowsHide: true }));
+  });
+
   it('rejects the MSYS path `which` prints on Windows', () => {
     // The exact string the old `execSync('which gh')` handed to spawnSync.
     expect(pickWindowsCommand('/c/Program Files/GitHub CLI/gh')).toBeNull();

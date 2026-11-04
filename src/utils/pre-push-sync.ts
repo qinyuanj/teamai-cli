@@ -21,6 +21,7 @@ import { EXCLUDED_RULE_NAMES } from '../builtin-rules.js';
 import { log } from './logger.js';
 import { placedResourcePath } from '../push-namespaces.js';
 import { recordDelivered, type DeliveredHashes } from '../resources/delivered-copies.js';
+import { buildRolePullContext, resolveDesiredSkills } from '../resources/desired.js';
 
 const CONTRIBUTORS_FILE = 'CONTRIBUTORS';
 
@@ -239,27 +240,13 @@ async function syncSkillsToLocal(
 
   if (!await pathExists(teamSkillsDir)) return;
 
-  // Build map of team repo skill dirs (handling both flat and namespaced layout)
-  const teamSkillPaths = new Map<string, string>(); // skillName → absolute path in team repo
-  const topDirs = await listDirs(teamSkillsDir);
+  // Compare each local skill with the copy pull delivers under its name
+  // (#1577): the same resolver, so a same-name skill is never synced from
+  // another namespace's copy. A conflict stops pull's skills, and this sync.
+  const desired = await resolveDesiredSkills(teamConfig, localConfig, await buildRolePullContext(localConfig));
 
-  for (const dir of topDirs) {
-    const dirPath = path.join(teamSkillsDir, dir);
-
-    if (await pathExists(path.join(dirPath, 'SKILL.md'))) {
-      // Flat skill at top level
-      teamSkillPaths.set(dir, dirPath);
-    } else {
-      // Namespace directory — scan subdirectories
-      const subDirs = await listDirs(dirPath);
-
-      for (const subDir of subDirs) {
-        if (!teamSkillPaths.has(subDir)) {
-          teamSkillPaths.set(subDir, path.join(dirPath, subDir));
-        }
-      }
-    }
-  }
+  if (desired.kind !== 'resolved') return;
+  const teamSkillPaths = new Map(desired.items.map((item) => [item.name, item.sourcePath] as const));
 
   const install = installOf(teamConfig, localConfig);
 
