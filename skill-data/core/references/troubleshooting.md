@@ -256,6 +256,21 @@ For a GitLab deployed at a sub-path, include that path in `GITLAB_URL`, for
 example `https://git.example.com/gitlab`. MR import keeps it in the API base
 and removes it from the project id. An MR outside that instance path is refused.
 
+## Gitea URL or token missing
+
+Every Gitea member must set both on their own machine; nothing is derived from
+the team repo URL. Set them and retry:
+
+```bash
+export GITEA_URL=https://git.example.com      # instance base URL, scheme and port
+read -rs GITEA_TOKEN && export GITEA_TOKEN   # paste when prompted; repo scope
+teamai init https://git.example.com/yourorg/yourrepo
+```
+
+An intranet instance on plain HTTP keeps `http` and its port as written; a
+generic-Git clone of the same URL is still refused. `teamai doctor` reports both
+variables when either is missing.
+
 ## Which tools actually get hooks
 
 `teamai hooks inject` prints **"Hooks injected into all AI tool settings"** even

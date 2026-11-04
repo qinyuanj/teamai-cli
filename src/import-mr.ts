@@ -8,6 +8,8 @@ import { z } from 'zod';
 import { fetchGitHubPR } from './providers/github/mr-fetch.js';
 import { fetchGitLabMR } from './providers/gitlab/mr-fetch.js';
 import { fetchTGitMR } from './providers/tgit/mr-fetch.js';
+import { fetchGiteaPR } from './providers/gitea/mr-fetch.js';
+import { isGiteaInstanceUrl } from './providers/gitea/repo-url.js';
 import type { MRData, MRFetchOptions, MRThread, LearningDraft } from './types.js';
 import { callTool } from './tool-launch/call.js';
 import { extractKeywords, findOverlappingLearnings } from './utils/dedup.js';
@@ -41,7 +43,15 @@ async function fetchMR(url: string, opts: MRFetchOptions): Promise<MRData> {
     return fetchGitLabMR(url, opts);
   }
 
-  throw new Error(`Unsupported MR URL: ${url}. Only GitHub, TGit and GitLab are supported`);
+  // Gitea (self-hosted only): `/pulls/<n>` is plural, unlike GitHub's `/pull/`.
+  // That route alone is not conclusive on an arbitrary host, so also require the
+  // host to be the configured Gitea instance — otherwise fall through rather
+  // than send a token somewhere unexpected.
+  if (/\/pulls\/\d+/.test(url) && isGiteaInstanceUrl(url)) {
+    return fetchGiteaPR(url, opts);
+  }
+
+  throw new Error(`Unsupported MR URL: ${url}. Only GitHub, TGit, GitLab and Gitea are supported`);
 }
 
 /** Characters of the prompt the review threads may take (#1187). */
@@ -304,6 +314,11 @@ function extractRepoUrlFromMrUrl(mrUrl: string): string {
   const gitlabMatch = mrUrl.match(/^(https?:\/\/.+?\/.+\/[^/]+)\/-\/merge_requests\//);
 
   if (gitlabMatch) return `${gitlabMatch[1]}.git`;
+  // Gitea: https://<host>/owner/repo/pulls/123 — host-gated like fetchMR, since
+  // `/pulls/` on an unknown host is not necessarily Gitea.
+  const giteaMatch = mrUrl.match(/^(https?:\/\/[^/]+\/[^/]+\/[^/]+)\/pulls\/\d+/);
+
+  if (giteaMatch && isGiteaInstanceUrl(mrUrl)) return `${giteaMatch[1]}.git`;
 
   // Cannot reliably extract; return empty string so caller skips incremental update
   return '';

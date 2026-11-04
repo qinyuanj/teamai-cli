@@ -4,6 +4,7 @@ import { StringDecoder } from 'node:string_decoder';
 import fs from 'fs-extra';
 
 import { getGitHubToken } from './providers/github/gh-cli.js';
+import { getGiteaToken, giteaAuthHeaderValue } from './providers/gitea/gitea-api.js';
 import { getGitLabToken } from './providers/gitlab/gitlab-api.js';
 import { getGitCodeToken } from './providers/gitcode/gitcode-api.js';
 import { tgitGitCloneUrl } from './providers/tgit/rest-auth.js';
@@ -220,6 +221,21 @@ function resolveCloneAuth(
             cloneMethod = 'https-anonymous';
             log.debug('shallowClone: no GITLAB_TOKEN; trying anonymous HTTPS');
         }
+    } else if (provider === 'gitea') {
+        // Gitea: the token goes as HTTP Basic through http.extraHeader and stays out
+        // of the URL. http is not upgraded: an intranet instance is often plain http.
+        const token = getGiteaToken();
+
+        cloneUrl = url;
+
+        if (token) {
+            extraAuthHeader = giteaAuthHeaderValue(token);
+            cloneMethod = 'https-token';
+            log.debug('shallowClone: cloning Gitea repository with token');
+        } else {
+            cloneMethod = 'https-anonymous';
+            log.debug('shallowClone: no GITEA_TOKEN; trying anonymous clone');
+        }
     } else if (provider === 'gitcode') {
         // GitCode: PAT 走 HTTP Basic（用户名固定 oauth2），用 http.extraHeader 注入，
         // token 不进 URL、不落 .git/config。shallowFetch 会用同样的 header 复用认证
@@ -357,6 +373,12 @@ function fetchAuthHeader(provider?: string): string | null {
         const token = getGitCodeToken();
 
         return token ? buildAuthHeader(token, 'oauth2') : null;
+    }
+
+    if (provider === 'gitea') {
+        const token = getGiteaToken();
+
+        return token ? giteaAuthHeaderValue(token) : null;
     }
 
     return null;

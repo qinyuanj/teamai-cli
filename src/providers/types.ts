@@ -200,7 +200,7 @@ export interface GitProvider {
    *   GitHub: https://github.com/owner/repo/pull/123
    *   TGit:   https://git.woa.com/group/repo/merge_requests/456
    */
-  fetchMergeRequest?(url: string): Promise<import('../types.js').MRData>;
+  fetchMergeRequest?(url: string, opts?: import('../types.js').MRFetchOptions): Promise<import('../types.js').MRData>;
 
   /**
    * 列出 org / group / namespace 下的所有仓库（轻量元信息）。

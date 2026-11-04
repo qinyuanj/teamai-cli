@@ -1694,7 +1694,7 @@ describe('init --provider', () => {
 
   it('rejects an unknown provider and names the valid ones', () => {
     expect(() => resolveInitProvider('GitLab')).toThrow(
-      'Invalid --provider "GitLab". Use one of: tgit, github, cnb, gitlab, gitcode, git, '
+      'Invalid --provider "GitLab". Use one of: tgit, github, cnb, gitlab, gitcode, gitea, git, '
       + 'or omit --provider to detect it from the repo URL.',
     );
   });

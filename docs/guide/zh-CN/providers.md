@@ -4,7 +4,7 @@
 
 ---
 
-TeamAI CLI 通过 provider 抽象层支持多个 Git 托管平台。当前实现了六个：
+TeamAI CLI 通过 provider 抽象层支持多个 Git 托管平台。当前实现了七个：
 
 | Provider | Host            | 认证方式                            | 建议场景              |
 |----------|-----------------|--------------------------------------|----------------------|
@@ -12,7 +12,8 @@ TeamAI CLI 通过 provider 抽象层支持多个 Git 托管平台。当前实现
 | `cnb`    | cnb.cool        | `cnb login` 或 `CNB_TOKEN` 环境变量  | CNB（云原生构建）用户 |
 | `gitlab` | gitlab.com 或自托管实例 | `GITLAB_TOKEN` 环境变量              | GitLab / 企业自托管   |
 | `gitcode`| gitcode.com     | `GITCODE_TOKEN` 环境变量或 init 交互粘贴 | GitCode（CSDN）用户 |
-| `git`    | 任意 Git host   | 系统 Git Credential Helper 或 SSH Key | 自建 Gitea 等其他平台 |
+| `gitea`  | 仅自托管实例 | `GITEA_URL` 与 `GITEA_TOKEN` 环境变量，每台机器都要设置 | 自建 Gitea |
+| `git`    | 任意 Git host   | 系统 Git Credential Helper 或 SSH Key | 其他自建平台（仅传输） |
 | `tgit`   | git.woa.com     | `gf` CLI（自动下载）+ `~/.netrc`     | 腾讯内部团队          |
 
 ## Provider 自动检测
@@ -31,6 +32,7 @@ https://gitlab.com/org/repo(.git)       → gitlab
 git@gitlab.com:org/repo.git             → gitlab
 https://gitcode.com/org/repo(.git)      → gitcode
 git@gitcode.com:org/repo.git            → gitcode
+https://gitea.example.com/org/repo.git  → gitea（必须设置 GITEA_URL）
 https://git.example.com/group/repo.git  → git
 git@git.example.com:group/repo.git      → git
 ```
@@ -43,7 +45,7 @@ git@git.example.com:group/repo.git      → git
 teamai init https://gitlab.example.com/group/repo --provider git
 ```
 
-取值：`tgit`、`github`、`cnb`、`gitlab`、`gitcode`、`git`。`git` 不需要平台 token，用已有的 Git 凭据；PR/MR 需要自己到 Git 平台上创建。该选择只影响本机。自建 GitLab 用 `--provider gitlab` 时仍需设置 `GITLAB_URL` 和 `GITLAB_TOKEN`。
+取值：`tgit`、`github`、`cnb`、`gitlab`、`gitcode`、`gitea`、`git`。`git` 不需要平台 token，用已有的 Git 凭据；PR/MR 需要自己到 Git 平台上创建。该选择只影响本机。自建 GitLab 用 `--provider gitlab` 时仍需设置 `GITLAB_URL` 和 `GITLAB_TOKEN`；`--provider gitea` 需要 `GITEA_URL` 和 `GITEA_TOKEN`。
 
 ## 通用 Git Provider（自建/私有仓库）
 
@@ -238,9 +240,49 @@ GitCode 命名空间为单层（用户或组织），仓库地址形如 `owner/r
 
 GitCode 不设默认 email 域，使用用户的 git 全局配置。
 
+## Gitea Provider（仅自托管）
+
+Gitea Provider 通过 Gitea **REST API v1**（`<base>/api/v1`）工作，不需要外部 CLI，只依赖一个 Access Token。
+
+### 认证
+
+```bash
+export GITEA_URL=https://gitea.example.com     # 实例 base URL，必须带 scheme
+export GITEA_TOKEN=xxxxxxxxxxxxxxxxxxxx        # Access Token，需要 repo scope
+```
+
+在 Gitea → 设置 → 应用 → 生成令牌 处创建 token。token 变量按顺序读取：`GITEA_TOKEN`、`GITEA_ACCESS_TOKEN`、`GITEA_PAT`，空值会跳过。
+
+**每个成员的机器都必须设置 `GITEA_URL`。** Gitea 没有公有云旗舰实例，因此没有默认值，TeamAI 也不会从团队仓 URL 推导实例地址。没设置的成员会落到通用 Git：init 不会开 PR，doctor 会报告 URL 缺失。`teamai doctor` 会检查 `GITEA_URL` 和 token。
+
+### 检测与 `teamai init`
+
+- URL 的 host（含端口）与 `GITEA_URL` 一致时识别为 `gitea`。没设置时，Gitea URL 会落到 `git` 通用 Provider。
+- 检测顺序：已知 host → 自托管 GitLab → 自托管 Gitea → `git`。
+
+### 内网 http 与非标准端口
+
+Provider 不会把 `http` 升级为 `https`，端口也完整保留，`http://gitea.internal:3000` 这类内网实例按配置原样使用。明文 HTTP 只在这里放开：通用 Git 仍然拒绝。
+
+### 路径与能力
+
+Gitea 没有子组，仓库路径恒为 `owner/repo`。带 `/src/branch/main`、`/pulls/42` 等 web 路由的浏览器地址会解析回仓库本身。
+
+- HTTPS clone 通过 `http.extraHeader` 传凭据，并按实例写入一个从环境变量读 token 的 credential helper 供后续 fetch/push 使用；token 不进 remote URL，也不写入 `.git/config`。也支持 SSH 公钥。
+- `createRepo` 建在当前用户或可见组织下，否则直接报错。
+- git-over-HTTP 默认把 token 当作 Basic 用户名。设置 `GITEA_USER` 后改为以该用户名登录、token 作密码，适用于会改写认证头的反向代理。
+- `teamai push` 会创建 PR；`teamai import --from-mr` 可以导入当前实例的 `/pulls/<n>` 链接，包含提交列表、diff 和评审讨论。
+- PR 历史按分页读取，超过一页也能正常回答；self-improvement 看板看到的打开、关闭、合并状态与其他 provider 一致。
+- TeamAI 不读取 Gitea 的 CI：工作流交付结果中的 CI 状态为 `unsupported`（与 TGit、GitCode 相同）。
+- 工作流交付只在 host 和端口都属于当前配置的实例时保留明文 HTTP 的 PR 链接；其他 host 仍必须使用 HTTPS，通用 Git 也依旧拒绝明文 HTTP 远程地址。
+
+### 默认 email 域
+
+Gitea 不设默认 email 域，使用用户的 git 全局配置。
+
 ## 在 `teamai.yaml` 中指定 Provider
 
-除了 URL 自动检测，也可以在 team 仓库的 `teamai.yaml` 中显式写 `provider: github`、`provider: tgit`、`provider: cnb`、`provider: gitlab`、`provider: gitcode` 或 `provider: git` 强制切换。一个典型的 `teamai.yaml`：
+除了 URL 自动检测，也可以在 team 仓库的 `teamai.yaml` 中显式写 `provider: github`、`provider: tgit`、`provider: cnb`、`provider: gitlab`、`provider: gitcode`、`provider: gitea` 或 `provider: git` 强制切换。一个典型的 `teamai.yaml`：
 
 ```yaml
 team: my-team

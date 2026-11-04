@@ -37,6 +37,9 @@ vi.mock('../config.js', async (importOriginal) => ({
 vi.mock('../providers/github/mr-fetch.js', () => ({
   fetchGitHubPR: vi.fn(async (url: string) => ({ title: 'Retry budget', description: '', commits: [], diff: '', url })),
 }));
+vi.mock('../providers/gitea/mr-fetch.js', () => ({
+  fetchGiteaPR: vi.fn(async (url: string) => ({ title: 'Gitea change', description: '', commits: [], diff: '', url })),
+}));
 vi.mock('../tool-launch/call.js', () => ({
   callTool: vi.fn(async () => ({ text: `---\ntitle: Retry budget\n---\n${DRAFT_BODY}\n`, tool: 'claude' })),
 }));
@@ -50,6 +53,7 @@ import { importCmd } from '../import.js';
 import { log, setSilent } from '../utils/logger.js';
 import { callTool } from '../tool-launch/call.js';
 import { fetchGitHubPR } from '../providers/github/mr-fetch.js';
+import { fetchGiteaPR } from '../providers/gitea/mr-fetch.js';
 
 describe('parseLearningDraft', () => {
   it('parses well-formed frontmatter', () => {
@@ -259,6 +263,49 @@ describe('importFromMR possible-duplicate notice', () => {
   });
 });
 
+
+describe('teamai import --from-mr with a Gitea /pulls/ URL', () => {
+  let root: string;
+  const originalEnv = { ...process.env };
+
+  beforeEach(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'teamai-import-mr-gitea-'));
+    teamRepo = path.join(root, 'team-repo');
+    fs.mkdirSync(teamRepo, { recursive: true });
+    process.env.GITEA_URL = 'http://gitea.internal:3000';
+    process.env.GITEA_TOKEN = 'gta_secret';
+    vi.mocked(fetchGiteaPR).mockClear();
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  it('fetches the PR of the configured instance, passing the fetch options through', async () => {
+    const url = 'http://gitea.internal:3000/team/repo/pulls/42';
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    try {
+      await importCmd({ fromMr: [url], dryRun: true, all: true });
+      await importCmd({ fromMr: [url], dryRun: true, all: true, discussions: false });
+    } finally {
+      write.mockRestore();
+    }
+
+    expect(vi.mocked(fetchGiteaPR).mock.calls).toEqual([[url, { discussions: true }], [url, { discussions: false }]]);
+  });
+
+  it('refuses a /pulls/ URL on another host rather than sending it the token', async () => {
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    try {
+      await expect(importCmd({ fromMr: ['https://evil.example/team/repo/pulls/42'], dryRun: true, all: true })).rejects.toThrow();
+    } finally {
+      write.mockRestore();
+    }
+
+    expect(vi.mocked(fetchGiteaPR)).not.toHaveBeenCalled();
+  });
+});
 
 describe('teamai import --from-mr <url...> (#1104)', () => {
   let root: string;

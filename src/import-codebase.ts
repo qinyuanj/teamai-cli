@@ -132,7 +132,7 @@ function keepEnrichedComponents(manifests: { published: EvidenceJson | null; sta
   };
 }
 
-const PROVIDER_SLUG_PREFIXES = ['github__', 'gitlab__', 'tgit__'] as const;
+const PROVIDER_SLUG_PREFIXES = ['github__', 'gitlab__', 'tgit__', 'gitea__'] as const;
 
 /**
  * The source a `source-manifest.json` names: a repository, or for a checkout

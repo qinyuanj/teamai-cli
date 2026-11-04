@@ -181,7 +181,9 @@ GitLab MR 导入会按每页 50 个继续读取提交，而不是只读取第一
 
 GitLab 的 `--from-org`，以及 GitHub `--from-org` 的 `gh` 路径与回退到的 REST 路径，都会为组织仓库列表的每一页设置独立的 30 秒期限，包含读取响应正文。任一页超时都会使导入失败，不写入白名单，也不开始导入仓库，且两条路径在超时后都不会回退到 `/users/<org>/repos`。
 
-提炼时除了 MR 的描述、提交和 diff，还会读取评审 threads：GitLab 的 discussions，GitHub 的 review 评论、review 结论和会话评论，TGit 的 notes。每个 thread 带上它锚定的文件和行、是否已 resolved，以及按顺序标为 MR 作者或评审者的各条 note 进入提示词；已 resolved 的 thread 里的决定比 diff 更重要。teamai 自己的 CI 评论会被跳过。`--no-discussions` 不读取 threads，`teamai ci extract-mr` 同样适用。`teamai.yaml` 设了 `language: en` 时 learning 用英文写，否则用中文。
+提炼时除了 MR 的描述、提交和 diff，还会读取评审 threads：GitLab 的 discussions，GitHub 的 review 评论、review 结论和会话评论，TGit 的 notes，Gitea 的 review 评论、review 结论和会话评论。每个 thread 带上它锚定的文件和行、是否已 resolved，以及按顺序标为 MR 作者或评审者的各条 note 进入提示词；已 resolved 的 thread 里的决定比 diff 更重要。teamai 自己的 CI 评论会被跳过。`--no-discussions` 不读取 threads，`teamai ci extract-mr` 同样适用。`teamai.yaml` 设了 `language: en` 时 learning 用英文写，否则用中文。
+
+Gitea PR 用 `/pulls/<n>` 链接导入，该链接必须属于配置的 `GITEA_URL` 实例（保留明文 HTTP 和端口）；代码评论按文件和行归入 thread，与 Gitea 页面上的分组一致。
 
 AI 生成的 MR learning 中，`title` 不是字符串时，摘要和入队文件名使用 MR 标题；`tags` 只展示数组中的字符串项。不会为了修复元数据而改写草稿正文。
 

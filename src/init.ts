@@ -755,6 +755,16 @@ async function selectInitProvider(input: string, forced: ProviderName | undefine
     );
   }
 
+  // Gitea has no default instance, and its API client targets GITEA_URL, not the
+  // repo URL's host. No instance is derived from the repo: every member sets it.
+  if (forced === 'gitea' && (!process.env.GITEA_URL?.trim() || detectProvider(input) === 'git')) {
+    throw new Error(
+      '--provider gitea needs this Gitea instance configured. Set GITEA_URL to its base URL '
+      + '(for example http://gitea.internal:3000) and GITEA_TOKEN, then run teamai init again. '
+      + 'To use your existing Git authentication without a token, pass --provider git.',
+    );
+  }
+
   log.info(`Provider: ${forced} (--provider; auto-detection skipped)`);
 
   return forced;

@@ -4,7 +4,7 @@
 
 ---
 
-TeamAI CLI talks to Git hosting platforms through a provider layer. Six providers are implemented:
+TeamAI CLI talks to Git hosting platforms through a provider layer. Seven providers are implemented:
 
 | Provider | Host | Authentication | Suggested for |
 |----------|------|----------------|---------------|
@@ -12,7 +12,8 @@ TeamAI CLI talks to Git hosting platforms through a provider layer. Six provider
 | `cnb` | cnb.cool | `cnb login` or the `CNB_TOKEN` environment variable | CNB (Cloud Native Build) users |
 | `gitlab` | gitlab.com or a self-hosted instance | `GITLAB_TOKEN` environment variable | GitLab, including enterprise self-hosted |
 | `gitcode` | gitcode.com | `GITCODE_TOKEN` environment variable, or paste a token during init | GitCode (CSDN) users |
-| `git` | any Git host | The system Git credential helper or an SSH key | Self-hosted Gitea and other platforms |
+| `gitea` | self-hosted instances only | `GITEA_URL` and `GITEA_TOKEN` environment variables, on every machine | Self-hosted Gitea |
+| `git` | any Git host | The system Git credential helper or an SSH key | Other self-hosted platforms (transport only) |
 | `tgit` | git.woa.com | `gf` CLI (downloaded automatically) + `~/.netrc` | Tencent internal teams |
 
 ## Provider auto-detection
@@ -31,6 +32,7 @@ https://gitlab.com/org/repo(.git)       → gitlab
 git@gitlab.com:org/repo.git             → gitlab
 https://gitcode.com/org/repo(.git)      → gitcode
 git@gitcode.com:org/repo.git            → gitcode
+https://gitea.example.com/org/repo.git  → gitea (GITEA_URL must be set)
 https://git.example.com/group/repo.git  → git
 git@git.example.com:group/repo.git      → git
 ```
@@ -43,7 +45,7 @@ After a successful init the provider is written to the `provider` field of the t
 teamai init https://gitlab.example.com/group/repo --provider git
 ```
 
-Values: `tgit`, `github`, `cnb`, `gitlab`, `gitcode`, `git`. `git` needs no platform token and uses your existing Git credentials; open PRs/MRs on the Git host yourself. The choice only affects your machine. A self-hosted GitLab with `--provider gitlab` still needs `GITLAB_URL` and `GITLAB_TOKEN`.
+Values: `tgit`, `github`, `cnb`, `gitlab`, `gitcode`, `gitea`, `git`. `git` needs no platform token and uses your existing Git credentials; open PRs/MRs on the Git host yourself. The choice only affects your machine. A self-hosted GitLab with `--provider gitlab` still needs `GITLAB_URL` and `GITLAB_TOKEN`; `--provider gitea` needs `GITEA_URL` and `GITEA_TOKEN`.
 
 ## Generic Git provider (self-hosted and private repos)
 
@@ -235,9 +237,49 @@ GitCode namespaces are single-level (a user or an organization); repo addresses 
 
 GitCode sets no default email domain and uses the user's global git configuration.
 
+## Gitea provider (self-hosted only)
+
+Gitea uses its **REST API v1** (`<base>/api/v1`), needs no external CLI, and relies on a single access token.
+
+### Authentication
+
+```bash
+export GITEA_URL=https://gitea.example.com     # instance base URL, scheme required
+export GITEA_TOKEN=xxxxxxxxxxxxxxxxxxxx        # access token with repo scope
+```
+
+Create the token under Gitea → Settings → Applications → Generate Token. Token variables are read in this order: `GITEA_TOKEN`, `GITEA_ACCESS_TOKEN`, `GITEA_PAT`; empty values are skipped.
+
+**`GITEA_URL` is required on every member's machine.** Gitea has no public flagship instance, so there is no default, and TeamAI never derives the instance from the team repo URL. A member without it uses generic Git: init opens no PR and doctor reports the missing URL. `teamai doctor` checks `GITEA_URL` and the token.
+
+### Detection and `teamai init`
+
+- A URL whose host (including port) matches `GITEA_URL` is detected as `gitea`. Without it, a Gitea URL falls back to the `git` provider.
+- Detection order: known hosts → self-hosted GitLab → self-hosted Gitea → `git`.
+
+### HTTP and custom ports
+
+The provider never upgrades `http` to `https` and keeps the port, so intranet instances such as `http://gitea.internal:3000` work as configured. Plain HTTP stays allowed only here: generic Git still refuses it.
+
+### Paths and capabilities
+
+Gitea has no subgroups: repo paths are always `owner/repo`. Browser URLs with routes such as `/src/branch/main` or `/pulls/42` resolve back to the repo.
+
+- HTTPS clone sends credentials through `http.extraHeader`, and a credential helper scoped to the instance reads the token from the environment for later fetches and pushes; the token never enters the remote URL or `.git/config`. SSH keys also work.
+- `createRepo` creates under the current user or a visible organization, and errors otherwise.
+- Git over HTTP sends the token as the Basic username. Set `GITEA_USER` to send it as the password for that user instead, for example behind a proxy that rewrites auth.
+- `teamai push` opens a pull request; `teamai import --from-mr` imports a `/pulls/<n>` URL of the configured instance, with its commits, diff and review threads.
+- Pull request history is read page by page, so a repository with more than one page of pull requests still answers, and the self-improvement dashboard sees open, closed and merged requests like on any other provider.
+- TeamAI does not read Gitea's CI: a workflow delivery reports the CI status as `unsupported` (as with TGit and GitCode).
+- Workflow delivery keeps a pull request URL over plain HTTP only when its host and port are the configured instance's. Every other host must use HTTPS, and generic Git still refuses plain HTTP remotes.
+
+### Default email domain
+
+Gitea sets no default email domain and uses the user's global git configuration.
+
 ## Setting the provider in `teamai.yaml`
 
-Besides URL auto-detection, the team repo's `teamai.yaml` can name the provider explicitly with `provider: github`, `provider: tgit`, `provider: cnb`, `provider: gitlab`, `provider: gitcode` or `provider: git`. A typical `teamai.yaml`:
+Besides URL auto-detection, the team repo's `teamai.yaml` can name the provider explicitly with `provider: github`, `provider: tgit`, `provider: cnb`, `provider: gitlab`, `provider: gitcode`, `provider: gitea` or `provider: git`. A typical `teamai.yaml`:
 
 ```yaml
 team: my-team
