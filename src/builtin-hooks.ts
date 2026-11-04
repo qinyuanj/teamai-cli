@@ -393,7 +393,7 @@ interface BuiltinHookSpec {
   timeoutSec: number;
 }
 
-const BUILTIN_HOOK_SPECS: BuiltinHookSpec[] = [
+export const BUILTIN_HOOK_SPECS: BuiltinHookSpec[] = [
   { key: 'Hook dispatch session-start', event: 'SessionStart', dispatchEvent: 'session-start', matcher: '*', timeoutSec: 15 },
   { key: 'Hook dispatch stop', event: 'Stop', dispatchEvent: 'stop', matcher: '*', timeoutSec: 15 },
   { key: 'Hook dispatch post-tool-use wildcard', event: 'PostToolUse', dispatchEvent: 'post-tool-use', matcher: '*', timeoutSec: 10 },
@@ -490,7 +490,12 @@ export function builtinHookDefs(tool: string): HookDef[] {
 interface AdapterBuiltinHooks {
   keys: string[];
   suffix?: string;
+  /** A matcher the artifact writes under the tool's own name for it. */
+  matchers?: ReadonlyMap<string, string>;
 }
+
+/** Kimi calls its todo tool `TodoList`; hook dispatch reads it back as `TodoWrite`. */
+export const KIMI_HOST_MATCHERS: ReadonlyMap<string, string> = new Map([['TodoWrite', 'TodoList']]);
 
 /**
  * Built-in hooks each non-settings tool really receives from the hook
@@ -506,6 +511,11 @@ interface AdapterBuiltinHooks {
  */
 const ADAPTER_BUILTIN_HOOKS: Record<HookAdapterId, AdapterBuiltinHooks | null> = {
   'kiro-hooks': { keys: ['Hook dispatch session-start'] },
+  // kimi-hooks.ts writes every built-in into config.toml, as plain dispatch commands.
+  'kimi-hooks': {
+    keys: BUILTIN_HOOK_SPECS.map((spec) => spec.key),
+    matchers: KIMI_HOST_MATCHERS,
+  },
   // agy-hooks.ts maps the same four events as OMP into agy's hooks.json
   // (SessionStart, PreInvocation, PostToolUse, Stop).
   'agy-hooks': {
@@ -578,14 +588,19 @@ export function installedBuiltinHookDefs(tool: string, settingsDriven: boolean):
 
   if (!adapter) return [];
 
-  return BUILTIN_HOOK_SPECS.flatMap((spec) => (adapter.keys.includes(spec.key) ? [{
-    source: 'builtin' as const,
-    key: spec.key,
-    event: spec.event,
-    matcher: spec.matcher,
-    command: getRawDispatchCommand(spec.dispatchEvent, tool, spec.matcher) + (adapter.suffix ?? ''),
-    description: `${TEAMAI_HOOK_DESCRIPTION_PREFIX} ${spec.key}`,
-  }] : []));
+  return BUILTIN_HOOK_SPECS.flatMap((spec) => {
+    if (!adapter.keys.includes(spec.key)) return [];
+    const matcher = adapter.matchers?.get(spec.matcher) ?? spec.matcher;
+
+    return [{
+      source: 'builtin' as const,
+      key: spec.key,
+      event: spec.event,
+      matcher,
+      command: getRawDispatchCommand(spec.dispatchEvent, tool, matcher) + (adapter.suffix ?? ''),
+      description: `${TEAMAI_HOOK_DESCRIPTION_PREFIX} ${spec.key}`,
+    }];
+  });
 }
 
 /** §4.8 team override of built-in hooks. Only whitelisted fields are honored. */

@@ -120,6 +120,7 @@ const DETECTORS: Record<ToolId, VersionDetector | null> = {
   qoder: null,
   'qoder-cn': null,
   kiro: null,
+  kimi: null,
   trae: null,
   'trae-cn': null,
   zcode: null,

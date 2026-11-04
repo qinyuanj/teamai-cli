@@ -574,6 +574,12 @@ export const DEFAULT_TOOL_PATHS = {
       agents: '.qoder-cn/agents',
     },
   },
+  // Kimi reads AGENTS.md and Markdown agents in both scopes; hooks go to its user config.toml.
+  kimi: {
+    skills: '.kimi-code/skills',
+    agents: '.kimi-code/agents',
+    claudemd: '.kimi-code/AGENTS.md',
+  },
   // Kiro: skills, steering (rules), and custom agents sync to .kiro/. Kiro CLI
   // V3 reads the standalone .kiro/hooks/teamai.json lifecycle hook. Legacy
   // TeamAI agentSpawn entries are migrated out of agent files; Kiro 2.x

@@ -147,7 +147,7 @@ export type RulesDir<R> = { readonly channel: 'dir'; readonly format: RuleFormat
 /** The team rules as one block in the tool's blocks file for the scope; `label` names that file in doctor. */
 export type RulesInline = { readonly channel: 'inline'; readonly label: string };
 
-export type RulesChannels = Scoped<RulesDir<HomeRead> | RulesInline, RulesDir<HomeRead | ProjectRead> | RunTime>;
+export type RulesChannels = Scoped<RulesDir<HomeRead> | RulesInline, RulesDir<HomeRead | ProjectRead> | RulesInline | RunTime>;
 
 /** Where a blocks file sits; `owned`: the whole file is teamai's. */
 export type BlocksFile = { readonly owned?: true; readonly header?: BlocksHeader } & (
@@ -235,7 +235,7 @@ export type HookFormat = 'claude' | 'cursor' | 'codex' | 'copilot' | 'zcode';
 export type HookSettings<R> = { readonly channel: 'settings'; readonly format: HookFormat; readonly reads: Reads<R>; readonly readGates?: readonly ReadGateKind[] };
 
 /** A file or directory of teamai's own the tool loads from its home, written by the tool's own adapter. */
-export type HookAdapterId = 'opencode-plugin' | 'pi-extension' | 'omp-extension' | 'hermes-plugin' | 'openclaw-hook' | 'dsh-hooks' | 'kiro-hooks' | 'agy-hooks';
+export type HookAdapterId = 'opencode-plugin' | 'pi-extension' | 'omp-extension' | 'hermes-plugin' | 'openclaw-hook' | 'dsh-hooks' | 'kiro-hooks' | 'agy-hooks' | 'kimi-hooks';
 
 export type HookAdapter = { readonly channel: 'adapter'; readonly adapter: HookAdapterId; readonly evidence: Evidence; readonly readGates?: readonly ReadGateKind[] };
 
@@ -425,6 +425,7 @@ export const TOOL_IDS = [
   'opencode',
   'muse',
   'agy',
+  'kimi',
 ] as const;
 
 /** A built-in tool (`TOOL_IDS`). */
@@ -1625,6 +1626,51 @@ export const TOOLS = {
       agentHooks: { cell: '✓t', note: 'runs from teamai\'s team-hook bridge, which can block a tool call; the dispatcher hands it a Claude payload' },
     },
   },
+  // Measured on Kimi Code 2.4.1: rules and agents probes are recorded in the rebuild notes.
+  kimi: {
+    home: { dir: '.kimi-code', moves: { by: [{ kind: 'env', name: 'KIMI_CODE_HOME', evidence: 'verified' }] } },
+    // Its Skill tool reaches a wildcard PostToolUse as `tool_input.skill`.
+    skillLoad: { calls: [{ name: 'Skill', evidence: 'verified' }] },
+    skills: {
+      user: [{ base: 'home', path: '.kimi-code/skills', evidence: 'assumed' }],
+      project: [{ base: 'project', path: '.kimi-code/skills', when: 'cwdOnly', evidence: 'verified' }],
+    },
+    rules: {
+      user: { channel: 'inline', label: 'Kimi Code AGENTS.md' },
+      project: { channel: 'inline', label: 'Kimi Code AGENTS.md' },
+    },
+    blocks: {
+      user: { channel: 'file', file: { in: 'claudemd' }, reads: [{ base: 'home', path: '.kimi-code/AGENTS.md', evidence: 'verified' }] },
+      project: { channel: 'file', file: { in: 'claudemd' }, reads: [{ base: 'project', path: '.kimi-code/AGENTS.md', when: 'cwdOnly', evidence: 'verified' }] },
+    },
+    agents: {
+      user: { reads: [{ base: 'home', path: '.kimi-code/agents', evidence: 'verified' }] },
+      project: { reads: [{ base: 'project', path: '.kimi-code/agents', when: 'cwdOnly', evidence: 'verified' }] },
+    },
+    mcp: NONE,
+    // Stop stdout never reaches the model (only a deny, which forces a turn), so the hint waits for the next prompt.
+    hooks: { user: { channel: 'adapter', adapter: 'kimi-hooks', evidence: 'verified' }, self: 'user', subagentStop: false, stopReply: false, shell: 'system', teamHooks: 'home' },
+    sessions: 'unknown',
+    launch: 'none',
+    autoCompact: 'none',
+    skillAllowedTools: false,
+    searchEvidence: false,
+    projectFromHome: false,
+    legacyAgentMd: false,
+    tokens: 'unknown',
+    features: {
+      env: '?',
+      workflows: '?',
+      unattended: '?',
+      recall: '?',
+      stats: '?',
+      tokens: '?',
+      aiBackend: '?',
+      votesJudge: '?',
+      sessionJudge: '?',
+      agentHooks: '?',
+    },
+  },
 } as const satisfies Record<ToolId, ToolDescriptor>;
 
 export function isToolId(value: string): value is ToolId {
@@ -1778,6 +1824,7 @@ export function runTimeRulesOf(tool: string): RunTimeVia | null {
 
   switch (project.channel) {
     case 'dir':
+    case 'inline':
       return null;
     case 'session-hook':
     case 'extension':

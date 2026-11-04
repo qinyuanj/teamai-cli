@@ -46,6 +46,7 @@ They are not written into the project's `AGENTS.md`. Each tool gets its own file
 | DeepSeek Harness | `$DSH_HOME/AGENTS.md` (`~/.dsh/AGENTS.md` when unset) | session-start hook |
 | JoyCode | `$JOYCODE_HOME/rules.txt` when set, otherwise `~/.joycode/rules.txt` | none |
 | Muse Code | `${XDG_CONFIG_HOME:-~/.config}/muse/AGENTS.md` | session-start hook |
+| Kimi Code CLI | `$KIMI_CODE_HOME/AGENTS.md` (`~/.kimi-code/AGENTS.md` when unset) | `.kimi-code/AGENTS.md` |
 | Antigravity | `~/.gemini/config/rules/teamai-context.md` | `.agents/rules/teamai-context.md` |
 
 ## Viewing the result

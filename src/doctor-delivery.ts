@@ -1295,18 +1295,15 @@ async function buildProjectRulesHookChecks(ctx: DoctorContext): Promise<Check[]>
 }
 
 /**
- * In user scope each tool with no rules format reads the team rules from a
- * managed block of a file only it reads (`userRulesFile`: the Codex family's
- * AGENTS.md, #938; ZCode, DeepSeek Harness, the OpenClaw workspace, Pi,
- * JoyCode's rules.txt, #946); in a project the session-start hook (the Codex
- * family, ZCode, DeepSeek Harness) or Pi's extension adds them, and doctor
- * checks that channel instead. One check per enabled,
- * installed tool, on the bytes of the block in the file the tool reads.
+ * Each tool with inline rules reads a managed block in its instructions file.
+ * Most use that file only in user scope; Kimi also reads its project file.
+ * Other project tools use a session-start hook or extension instead. One check
+ * per enabled, installed tool compares the bytes of the delivered block.
  */
 async function buildUserRulesFileChecks(ctx: DoctorContext, items: ResourceItem[]): Promise<Check[]> {
   const { localConfig, teamConfig } = ctx;
 
-  if (!teamConfig || localConfig.scope !== 'user') return [];
+  if (!teamConfig) return [];
 
   const { inlineRulesLabelOf, inlineRulesLocationOf, teamRulesBlock, unreadableConfigOf } = await import('./resources/rules.js');
   const { isCodexTool } = await import('./utils/tool-names.js');
@@ -1316,7 +1313,7 @@ async function buildUserRulesFileChecks(ctx: DoctorContext, items: ResourceItem[
   const checks: Check[] = [];
 
   for (const tool of Object.keys(install.toolPaths)) {
-    const label = inlineRulesLabelOf(tool);
+    const label = inlineRulesLabelOf(tool, install.scope);
 
     // Hermes keeps its rules in its own SOUL.md block.
     if (label === null || tool === 'hermes' || isAgentExcluded(localConfig, tool)) continue;

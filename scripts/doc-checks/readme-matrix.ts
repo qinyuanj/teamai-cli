@@ -51,6 +51,7 @@ const LABELS: ReadonlyMap<string, ToolId> = new Map(Object.entries({
   'DeepSeek Harness': 'dsh',
   Qoder: 'qoder',
   'Qoder CN': 'qoder-cn',
+  'Kimi Code': 'kimi',
   Kiro: 'kiro',
   Trae: 'trae',
   'Trae CN': 'trae-cn',

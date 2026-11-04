@@ -123,6 +123,7 @@ const TOOL_CALL_CASES: ToolCallCase[] = [
   { fixture: 'codex-real-a-cat', tool: 'codex', root: '.codex/skills' },
   { fixture: 'pi-read', tool: 'pi', root: '.pi/agent/skills' },
   { fixture: 'omp-read-uri', tool: 'omp', root: '.omp/agent/skills' },
+  { fixture: 'kimi-skill', tool: 'kimi', root: '.kimi-code/skills' },
 ];
 
 describe('skill use from a tool call (#1221)', () => {

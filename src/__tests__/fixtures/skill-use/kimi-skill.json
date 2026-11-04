@@ -1,0 +1,11 @@
+{
+  "session_id": "kimi-probe-run",
+  "cwd": "${CWD}",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Skill",
+  "tool_input": {
+    "skill": "hello-skill"
+  },
+  "tool_call_id": "tool_probe",
+  "tool_output": "Skill \"hello-skill\" loaded inline. Follow its instructions."
+}

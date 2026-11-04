@@ -798,6 +798,40 @@ describe('hooksList', () => {
             'SessionStart  →  teamai hook-dispatch session-start --tool <tool>',
         ]);
     });
+
+    it('lists Kimi Code hooks from the config.toml in its moved home', async () => {
+        const kimiHome = await fse.mkdtemp(path.join(os.tmpdir(), 'teamai-kimi-list-'));
+        const { reconcileKimiHooks, getKimiConfigPath } = await import('../kimi-hooks.js');
+        vi.stubEnv('KIMI_CODE_HOME', kimiHome);
+        await reconcileKimiHooks('injection');
+        const listedPath = getKimiConfigPath();
+        const out: string[] = [];
+        const consoleLog = vi.spyOn(console, 'log').mockImplementation((m?: unknown) => { out.push(String(m)); });
+        mockedAutoDetectInit.mockResolvedValue({
+            localConfig: mockLocalConfig,
+            teamConfig: { toolPaths: { kimi: { skills: '.kimi-code/skills' } } },
+        });
+
+        try {
+            await hooksList({});
+        } finally {
+            vi.unstubAllEnvs();
+            consoleLog.mockRestore();
+            await fse.remove(kimiHome);
+        }
+
+        const text = out.join('\n');
+        const builtin = text.slice(text.indexOf('Built-in hooks (A)'), text.indexOf('Team hooks (B)'));
+        expect(text).toContain('kimi');
+        expect(text).toContain(listedPath);
+        expect(builtinBlock(builtin, 'kimi')).toEqual([
+            'SessionStart  →  teamai hook-dispatch session-start --tool <tool>',
+            'Stop  →  teamai hook-dispatch stop --tool <tool>',
+            'PostToolUse  →  teamai hook-dispatch post-tool-use --tool <tool>',
+            'PostToolUse [TodoList]  →  teamai hook-dispatch post-tool-use --tool <tool> --matcher TodoList',
+            'UserPromptSubmit  →  teamai hook-dispatch prompt-submit --tool <tool>',
+        ]);
+    });
 });
 
 describe('hooksRemove', () => {

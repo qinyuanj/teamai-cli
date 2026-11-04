@@ -1,3 +1,21 @@
+import { z } from 'zod';
+
+const AdditionalContextSchema = z.object({ hookSpecificOutput: z.object({ additionalContext: z.string() }) });
+
+/**
+ * A hook reply as Kimi Code takes it. Kimi reads `message` (or plain text) from a JSON reply and drops the rest, so
+ * `additionalContext` would never reach the model. It only reads a reply on UserPromptSubmit (measured on 2.4.1).
+ */
+export function kimiHookReply(output: string): string {
+  try {
+    const reply = AdditionalContextSchema.safeParse(JSON.parse(output));
+
+    return reply.success ? JSON.stringify({ message: reply.data.hookSpecificOutput.additionalContext }) : output;
+  } catch {
+    return output;
+  }
+}
+
 /**
  * Asks the model to relay a message the host will not show by itself.
  *

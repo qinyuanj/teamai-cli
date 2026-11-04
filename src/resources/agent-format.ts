@@ -628,6 +628,37 @@ export function renderForOpencode(spec: AgentSpec, resolved?: ParsedFields): Ren
   return { ext: agentFileExtensionForTool('opencode'), content };
 }
 
+/** Kimi 2.4.1 reads Markdown agents with short tool names in YAML lists. */
+function normalizeKimiToolList(tools: ParsedValue): string[] {
+  const parsed = AgentToolsFieldSchema.parse(tools);
+
+  if (Array.isArray(parsed)) return parsed.map((tool) => tool.trim()).filter(Boolean);
+
+  return parsed?.split(',').map((tool) => tool.trim()).filter(Boolean) ?? [];
+}
+
+export function toKimiToolId(tool: string): string {
+  return tool === 'Task' ? 'Agent' : tool;
+}
+
+export function renderForKimi(spec: AgentSpec): RenderResult {
+  const frontmatter: ParsedFields = {
+    name: spec.name,
+    description: spec.description,
+  };
+
+  // Claude-style built-ins carry tools as one comma-separated string.
+  if (spec.tools !== undefined) frontmatter['tools'] = spec.tools;
+  Object.assign(frontmatter, spec.tool_extras?.['kimi']);
+
+  // Preserve an explicit empty allowlist: omitting it grants every tool.
+  for (const key of ['tools', 'disallowedTools']) {
+    if (frontmatter[key] !== undefined) frontmatter[key] = normalizeKimiToolList(frontmatter[key]).map(toKimiToolId);
+  }
+
+  return { ext: agentFileExtensionForTool('kimi'), content: matter.stringify(spec.instructions, frontmatter) };
+}
+
 // ─── Internal render helpers ─────────────────────────────────────────────────
 
 /**
@@ -760,6 +791,9 @@ const COMMON_COPILOT_FIELDS = new Set(['name', 'description', 'model', 'tools'])
 const COMMON_CODEX_FIELDS = new Set(['name', 'description', 'developer_instructions', 'model']);
 const COMMON_KIRO_FIELDS = new Set(['name', 'description', 'prompt', 'model', 'tools']);
 
+// Kimi has no `model` field; anything else non-common stays in tool_extras.kimi.
+const COMMON_KIMI_FIELDS = new Set(['name', 'description', 'tools']);
+
 // `mode` is not carried to the AgentSpec root — it is an OpenCode-only concept
 // (teamai always renders `subagent`), so it round-trips through tool_extras.opencode.
 const COMMON_OPENCODE_FIELDS = new Set(['description', 'model']);
@@ -828,6 +862,35 @@ export function reverseFromClaude(filePath: string, content: string): ReverseRes
   if (tools !== undefined) spec.tools = tools;
 
   if (Object.keys(extras).length > 0) spec.tool_extras = { claude: extras };
+
+  return { ok: true, spec };
+}
+
+/** Reverse a Kimi Markdown agent, defaulting its name to the filename. */
+export function reverseFromKimi(filePath: string, content: string): ReverseResult {
+  const read = readMarkdownAgent(content);
+
+  if (!read.ok) return read;
+  const { fields, body } = read;
+  const name = AgentTextFieldSchema.parse(fields['name']) ?? path.basename(filePath, '.md');
+
+  if (!name) return { ok: false, reason: 'missing field name' };
+  const description = AgentTextFieldSchema.parse(fields['description']);
+
+  if (!description) return { ok: false, reason: 'missing field description' };
+
+  if (!body) return { ok: false, reason: 'missing field instructions (empty body)' };
+  const extras: ParsedFields = {};
+
+  for (const [key, value] of Object.entries(fields)) {
+    if (!COMMON_KIMI_FIELDS.has(key)) extras[key] = value;
+  }
+
+  const spec: AgentSpec = { name, description, instructions: body };
+
+  if (fields['tools'] !== undefined) spec.tools = normalizeKimiToolList(fields['tools']);
+
+  if (Object.keys(extras).length > 0) spec.tool_extras = { kimi: extras };
 
   return { ok: true, spec };
 }
@@ -1338,6 +1401,7 @@ export function renderForTool(spec: AgentSpec, tool: ToolName, resolved?: Resolv
     case 'copilot': return renderForCopilot(target);
     case 'joycode': return renderForJoycode(target);
     case 'kiro': return renderForKiro(target);
+    case 'kimi': return renderForKimi(target);
     case 'opencode': return renderForOpencode(target, fields);
     case 'workbuddy': return renderForWorkbuddy(target);
     case 'muse': return renderForMuse(target);
@@ -1391,6 +1455,8 @@ function reverseByParser(tool: ToolName, filePath: string, content: string): Rev
       return reverseFromClaude(filePath, content);
     case 'kiro':
       return reverseFromKiro(filePath, content);
+    case 'kimi':
+      return reverseFromKimi(filePath, content);
     case 'zcode':
       return reverseFromClaude(filePath, content);
     case 'omp':

@@ -296,6 +296,10 @@ const ROWS: readonly (FilesRow | OtherRow)[] = [
   settings('joycode', 'user', '/joycode/hooks.json', '/joycode', { env: { JOYCODE_HOME: '/joycode' }, source: JOYCODE_SOURCE }),
   settings('joycode', 'project', '/joycode/hooks.json', '/joycode', { env: { JOYCODE_HOME: '/joycode' }, source: 'resolveHookScope: a workspace takes JoyCode user hooks' }),
   selfSettings('joycode', '<root>/.joycode/hooks.json', '<root>/.joycode', 'workspaceUnder', { source: 'JoyCode Desktop 0.6.0 lifecycle component: <project>/.joycode/hooks.json (source)' }),
+  adapter('kimi', 'user', '~/.kimi-code', '~/.kimi-code', { source: 'Kimi Code 2.4.1: config.toml is in KIMI_CODE_HOME; teamai manages its [[hooks]] tables' }),
+  adapter('kimi', 'user', '/kimi', '/kimi', { env: { KIMI_CODE_HOME: '/kimi' }, source: 'Kimi Code 2.4.1: KIMI_CODE_HOME moves the whole home' }),
+  adapter('kimi', 'project', '~/.kimi-code', '~/.kimi-code', { source: 'Kimi Code has user-level hooks in every scope' }),
+  adapter('kimi', 'project', '/kimi', '/kimi', { env: { KIMI_CODE_HOME: '/kimi' }, source: 'Kimi Code 2.4.1: KIMI_CODE_HOME moves the whole home' }),
   adapter('kiro', 'user', '~/.kiro/hooks', '~/.kiro', { source: 'Kiro CLI V3 docs: hook files in ~/.kiro/hooks load for every agent (#1341)' }),
   { tool: 'trae', scope: 'user', channel: 'unknown', existingDirs: [], installed: { probe: '~/.trae', met: false }, source: 'issue #1221 matrix: Trae hooks ?t' },
 ];

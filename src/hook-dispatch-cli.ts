@@ -19,12 +19,14 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
+import { z } from 'zod';
 
 import { resolveCliEntry } from './builtin-hooks.js';
 import { captureTail } from './utils/exec.js';
 import { createDispatcher, HookStdinSchema, stdinString, type Dispatcher, type HookStdin } from './hook-dispatch.js';
 import { buildHandlerRegistry, filterHandlersForConfig } from './hook-handlers.js';
 import { resolveHookCwd } from './utils/hook-cwd.js';
+import { normalizeToolName } from './utils/tool-names.js';
 import { windowsPowerShell } from './utils/powershell.js';
 import { log, setSilent, setStderrOnly } from './utils/logger.js';
 import { clearGitHookRepositoryEnv, GIT_HOOK_TOOL } from './git-hook.js';
@@ -368,6 +370,8 @@ function readStdinFile(file: string): string {
   }
 }
 
+const PromptPartsSchema = z.array(z.object({ text: z.string().optional() }));
+
 /** Parse STDIN JSON and normalize the event name for downstream handlers. */
 export function parseStdin(raw: string, event: string): HookStdin {
   let stdin: HookStdin = {};
@@ -415,6 +419,11 @@ export function parseStdin(raw: string, event: string): HookStdin {
     stdin.hook_event_name = EVENT_MAP.get(event) ?? event;
   }
 
+  // Kimi Code sends the prompt as content parts; handlers read a string.
+  const parts = PromptPartsSchema.safeParse(stdin.prompt);
+
+  if (parts.success) stdin.prompt = parts.data.flatMap((part) => (part.text === undefined ? [] : [part.text])).join('\n');
+
   const cwd = resolveHookCwd(stdin);
 
   if (cwd) stdin.cwd = cwd;
@@ -453,9 +462,11 @@ export { deriveDispatchSessionId };
 export async function hookDispatchCli(
   event: string,
   tool: string,
-  matcher: string,
+  hostMatcher: string,
   options: { bgOnly?: boolean; copilotGlobal?: string; stdinFile?: string; hookArgs?: string[] } = {},
 ): Promise<void> {
+  // A hook entry names the tool as its host does (Kimi's `TodoList`); the handlers are registered under teamai's names.
+  const matcher = normalizeToolName(hostMatcher);
   // A session teamai launched for itself, a judge or an AI call, is not the member's: only a workflow step's runs hooks.
   const launcher = launchedBy(process.env);
 
@@ -637,6 +648,11 @@ export async function hookDispatchCli(
 
       if (team.stderr) process.stderr.write(team.stderr);
       output = agy.agyHookReply(event, { builtin: output ?? '', team: team.stdout });
+    }
+
+    if (output && tool === 'kimi') {
+      const { kimiHookReply } = await import('./utils/hook-output.js');
+      output = kimiHookReply(output);
     }
 
     if (output) {

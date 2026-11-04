@@ -465,6 +465,28 @@ const ROWS: readonly MatrixRow[] = [
     source: 'agy 1.4.8 reads <root>/.agents/agents, where Muse\'s project copy would land in Muse\'s render (model kept): '
       + 'with both installed the dir is agy\'s, and nothing is retired there, since the files in it are agy\'s',
   },
+  {
+    tool: 'kimi', scope: 'user',
+    writes: ['~/.kimi-code/agents'],
+    existingDirs: ['~/.kimi-code'], installed: { probe: '~/.kimi-code', met: true },
+    reads: [{ at: '~/.kimi-code/agents', when: 'always' }],
+    source: 'Kimi Code 2.4.1: --agent loaded a user Markdown agent from KIMI_CODE_HOME/agents',
+  },
+  {
+    tool: 'kimi', scope: 'user', env: { KIMI_CODE_HOME: '/kimi' },
+    writes: ['/kimi/agents'],
+    existingDirs: ['/kimi'], installed: { probe: '/kimi', met: true },
+    reads: [{ at: '/kimi/agents', when: 'always' }],
+    source: 'Kimi Code 2.4.1: KIMI_CODE_HOME moves user agents with the whole home',
+  },
+  {
+    tool: 'kimi', scope: 'project',
+    writes: ['<root>/.kimi-code/agents'],
+    existingDirs: ['<root>/.kimi-code'], installed: { probe: '<root>/.kimi-code', met: true },
+    reads: [{ at: '<root>/.kimi-code/agents', when: 'cwdOnly' }],
+    broken: { 'project-subdir': { reason: 'cwd-only', issue: '#15' } },
+    source: 'Kimi Code 2.4.1: --agent loaded a project Markdown agent from .kimi-code/agents',
+  },
 ];
 
 describeLocateMatrix('agents', ROWS);

@@ -191,7 +191,7 @@ function projectRow(tool: ToolId, d: ToolDescriptor): string[] {
   return [
     name(tool),
     reads(d.skills.project),
-    channel(d.rules.project, (c) => 'probe' in c ? runTime(c) : reads(c.reads)),
+    channel(d.rules.project, (c) => c.channel === 'inline' ? `in the blocks file (${c.label})` : 'probe' in c ? runTime(c) : reads(c.reads)),
     channel(d.blocks.project, (c) => 'probe' in c ? runTime(c) : reads(c.reads)),
     agentsRead(d, 'project'),
     hooks.self === 'user' ? 'user hooks' : channel(hooks.self, (c) => reads(c.reads)),

@@ -1359,6 +1359,9 @@ function adapterDirIn(adapter: Exclude<HookAdapterId, 'openclaw-hook'>, homeOf: 
       return p.join(homeOf('hermes'), 'hooks');
     case 'kiro-hooks':
       return p.join(homeOf('kiro'), 'hooks');
+    // Kimi keeps its hooks in `config.toml` at its home root.
+    case 'kimi-hooks':
+      return homeOf('kimi');
     // agy reads `hooks.json` from its config root itself.
     case 'agy-hooks':
       return homeOf('agy');
