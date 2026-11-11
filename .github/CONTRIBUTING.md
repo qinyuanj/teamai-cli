@@ -71,6 +71,7 @@ src/
     github/          # GitHub (gh CLI or GITHUB_TOKEN)
     gitlab/          # GitLab (GITLAB_TOKEN)
     gitcode/         # GitCode (GITCODE_TOKEN)
+    gitea/           # Gitea, self-hosted (GITEA_URL + GITEA_TOKEN)
     cnb/             # CNB (cnb CLI or CNB_TOKEN)
     tgit/            # Tencent TGit (gf CLI)
     git/             # any Git host, no platform API

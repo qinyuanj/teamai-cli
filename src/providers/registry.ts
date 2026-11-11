@@ -4,6 +4,7 @@ import { GitHubProvider } from './github/index.js';
 import { CNBProvider } from './cnb/index.js';
 import { GitLabProvider } from './gitlab/index.js';
 import { GitCodeProvider } from './gitcode/index.js';
+import { GiteaProvider } from './gitea/index.js';
 import { GenericGitProvider } from './git/index.js';
 import { getCurrentPackageName } from '../package-info.js';
 import { probeSelfHostedGitLab } from './gitlab/probe.js';
@@ -39,7 +40,7 @@ const HOST_MAP = new Map([
 ]);
 
 /** Providers we are willing to accept as a default override. */
-const KNOWN_PROVIDERS = new Set(['github', 'tgit', 'cnb', 'gitlab', 'gitcode']);
+const KNOWN_PROVIDERS = new Set(['github', 'tgit', 'cnb', 'gitlab', 'gitcode', 'gitea']);
 
 /**
  * Decide the fallback provider used when the input URL host is unknown or
@@ -80,6 +81,7 @@ export function getDefaultProvider(): string {
  * Self-hosted GitLab instances are detected when the URL host matches the host
  * of the `GITLAB_URL` env var (e.g. `GITLAB_URL=https://gitlab.example.com`),
  * or via the `TEAMAI_GITLAB_HOST` override (see providers/gitlab/repo-url.ts).
+ * Self-hosted Gitea is detected only through the host of `GITEA_URL`.
  */
 export function detectProvider(input: string): string {
   const trimmed = input.trim();
@@ -141,20 +143,23 @@ export async function detectProviderForInit(input: string): Promise<string> {
 
 /**
  * Resolve a URL host to a provider name: a known platform host wins, then a
- * configured self-hosted GitLab instance, then the transport-only generic
- * provider for arbitrary hosts.
+ * configured self-hosted GitLab instance, then a configured Gitea instance, then
+ * the transport-only generic provider for arbitrary hosts.
  */
 function resolveHostProvider(host: string): string {
-  return HOST_MAP.get(host) ?? detectSelfHostedGitLabHost(host) ?? 'git';
+  return HOST_MAP.get(host)
+    ?? detectSelfHostedHost(host, 'gitlab', 'GITLAB_URL', 'TEAMAI_GITLAB_HOST')
+    ?? detectSelfHostedHost(host, 'gitea', 'GITEA_URL')
+    ?? 'git';
 }
 
 /**
- * Map a host to 'gitlab' when it matches the configured self-hosted GitLab
+ * Map a host to `provider` when it matches that provider's configured self-hosted
  * instance, otherwise return null.
  *
  * The configured host comes from (in priority order):
- *   1. `TEAMAI_GITLAB_HOST` — explicit override
- *   2. host parsed from `GITLAB_URL` — standard GitLab env var
+ *   1. `hostVar` (`TEAMAI_GITLAB_HOST`; Gitea has none) — explicit override
+ *   2. host parsed from `urlVar` (`GITLAB_URL`, `GITEA_URL`) — the instance's base URL
  *
  * Callers extract the host differently per URL form: the HTTPS branch keeps any
  * `:port`, while `ssh://` (URL.hostname) and scp-style `git@host:path` never
@@ -162,33 +167,33 @@ function resolveHostProvider(host: string): string {
  * therefore compared, so `GITLAB_URL=https://gl.example.com:8443` still matches
  * `git@gl.example.com:group/repo.git`.
  */
-function detectSelfHostedGitLabHost(host: string): string | null {
-  for (const configured of configuredGitLabHosts()) {
-    if (configured === host) return 'gitlab';
+function detectSelfHostedHost(host: string, provider: string, urlVar: string, hostVar?: string): string | null {
+  for (const configured of configuredHosts(urlVar, hostVar)) {
+    if (configured === host) return provider;
     // Strip a port from the configured host so the bare-host URL forms match.
     const withoutPort = configured.replace(/:\d+$/, '');
 
-    if (withoutPort === host) return 'gitlab';
+    if (withoutPort === host) return provider;
   }
 
   return null;
 }
 
-/** Configured self-hosted GitLab hosts, highest precedence first. */
-function configuredGitLabHosts(): string[] {
+/** Configured self-hosted hosts of one provider, highest precedence first. */
+function configuredHosts(urlVar: string, hostVar?: string): string[] {
   const hosts: string[] = [];
 
-  const override = process.env.TEAMAI_GITLAB_HOST?.trim().toLowerCase();
+  const override = hostVar ? process.env[hostVar]?.trim().toLowerCase() : undefined;
 
   if (override) hosts.push(override);
 
-  const gitlabUrl = process.env.GITLAB_URL?.trim();
+  const instanceUrl = process.env[urlVar]?.trim();
 
-  if (gitlabUrl) {
+  if (instanceUrl) {
     try {
-      hosts.push(new URL(gitlabUrl).host.toLowerCase());
+      hosts.push(new URL(instanceUrl).host.toLowerCase());
     } catch {
-      // ignore malformed GITLAB_URL — resolveGitLabBaseUrl reports it instead
+      // ignore a malformed URL — the provider's base URL resolver reports it instead
     }
   }
 
@@ -204,6 +209,7 @@ const PROVIDERS = new Map<string, () => GitProvider>([
   ['cnb', () => new CNBProvider()],
   ['gitlab', () => new GitLabProvider()],
   ['gitcode', () => new GitCodeProvider()],
+  ['gitea', () => new GiteaProvider()],
   ['git', () => new GenericGitProvider()],
 ]);
 

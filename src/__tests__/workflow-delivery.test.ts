@@ -16,7 +16,7 @@ import { _setDriverPollMs, runLocalDriver } from '../workflow/drivers/local/loca
 import { acquireLock, releaseLock } from '../update.js';
 import { AGENT_PATHS, DELIVERY_ONLY_PATHS, protectedPaths } from '../workflow/worktree.js';
 import { fakeGh, type FakeGhOptions } from './helpers/fake-gh.js';
-import { deliverPr } from '../workflow/pr-delivery.js';
+import { deliverPr, deliveredCi } from '../workflow/pr-delivery.js';
 import { buildEndRecord, pendingRecords } from '../workflow/records.js';
 import { projectRun } from '../workflow/snapshot.js';
 import * as worktree from '../workflow/worktree.js';
@@ -197,6 +197,18 @@ describe('workflow PR delivery contract', () => {
 
   const urls = fc.webUrl({ validSchemes: ['https', 'http'], withQueryParameters: true, withFragments: true, authoritySettings: { withUserInfo: true } });
 
+  it.each([
+    // Plain HTTP is a carve-out for the configured Gitea instance alone, port included; every other host keeps HTTPS.
+    ['http://gitea.internal:3000/acme/app/pulls/7', 'http://gitea.internal:3000', { url: 'http://gitea.internal:3000/acme/app/pulls/7' }],
+    ['http://gitea.internal:3000/acme/app/pulls/7?session=abc#c3', 'http://gitea.internal:3000', { url: 'http://gitea.internal:3000/acme/app/pulls/7' }],
+    ['http://gitea.internal/acme/app/pulls/7', 'http://gitea.internal:3000', { reason: 'must use HTTPS' }],
+    ['http://other.example/acme/app/pulls/7', 'http://gitea.internal:3000', { reason: 'must use HTTPS' }],
+    ['http://gitea.internal:3000/acme/app/pulls/7', '', { reason: 'must use HTTPS' }],
+    ['https://gitea.internal:3000/acme/app/pulls/7', 'http://gitea.internal:3000', { url: 'https://gitea.internal:3000/acme/app/pulls/7' }],
+  ])('sanitizes %s with GITEA_URL=%s', (value, giteaUrl, expected) => {
+    vi.stubEnv('GITEA_URL', giteaUrl);
+    expect(sanitizePrUrl(value)).toEqual(expected);
+  });
   it('never keeps credentials, a query or a fragment, gives back what it kept unchanged, and stays within 512 characters', () => {
     fc.assert(fc.property(fc.oneof(urls, fc.string(), fc.string({ minLength: 513, maxLength: 700 })), (value) => {
       const result = sanitizePrUrl(value);
@@ -1030,6 +1042,41 @@ function providerDouble(findOpen: PullRequestLookup['findOpen'], create: GitProv
   vi.spyOn(registry, 'providerForRemote').mockReturnValue({ kind: 'provider', provider, pullRequests: { findOpen, history: async () => [] }, repo: 'fixture/app', hostname });
   return createSpy;
 }
+
+describe('delivery on a plain-HTTP Gitea instance', () => {
+  it('reports CI as unsupported, because the Gitea lookup reads no checks', async () => {
+    const { cwd } = await fixture(FIX_THEN_REVIEW);
+    providerDouble(async () => undefined, async () => '', 'gitea.internal');
+
+    expect(await deliveredCi({ checkout: cwd, commit: 'a'.repeat(40) })).toEqual({ kind: 'unsupported' });
+  });
+
+  it.each([
+    ['keeps', 'http://gitea.internal:3000/fixture/app/pulls/4', 'http://gitea.internal:3000', true],
+    ['refuses', 'http://gitea.internal:3000/fixture/app/pulls/4', '', false],
+    ['refuses', 'http://gitea.internal:3000/fixture/app/pulls/4', 'http://gitea.example.com', false],
+  ])('%s the open pull request URL %s with GITEA_URL=%s', async (_verdict, url, giteaUrl, kept) => {
+    const { config, root, runId } = await fixture(FIX_THEN_REVIEW);
+    const fix = await take(config, runId);
+    await succeed(config, runId, fix, { to: pushWork(root, fix) });
+    vi.stubEnv('GITEA_URL', giteaUrl);
+    providerDouble(async () => url, async () => url, 'gitea.internal');
+
+    const next = await leaseNext(config, runId, remote, writable);
+
+    if (kept) expect(next).toMatchObject({ data: { lease: { step: 'review' } } });
+    else expect(next).toMatchObject({ data: { done: { outcome: 'failed' } } });
+    const run = await state(config, runId);
+
+    if (kept) {
+      expect(run.deliveries?.map((receipt) => receipt.url)).toEqual([url]);
+      expect(buildEndRecord(run, remote, 'tester').prs).toEqual([url]);
+    } else {
+      expect(run.steps[0]).toMatchObject({ status: 'failed', failure: { code: 'delivery_failed', message: expect.stringContaining('cannot keep') } });
+      expect(run.deliveries).toBeUndefined();
+    }
+  });
+});
 
 describe('retrying and cancelling a delivery', () => {
   it('delivers the winning child branch after an end cancels a sibling delivery', async () => {

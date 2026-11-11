@@ -97,7 +97,7 @@ Iterate with `npm run test:e2e -- <test-file>`; run the full suite only when cha
 Do not cover the full tool × repo provider matrix below. Leave extra repo providers and tools to CI, or say so when the local environment cannot run them:
 
 - Tools: Claude Code, Codex, CodeBuddy, OpenCode
-- Repo providers: `git`, `gitlab`, `github`
+- Repo providers: `git`, `gitlab`, `github`, `gitea`
 
 ## Where code lives
 

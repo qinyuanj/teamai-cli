@@ -8,6 +8,7 @@ import { GitLabProvider } from '../providers/gitlab/index.js';
 import { TGitProvider } from '../providers/tgit/index.js';
 import { GitCodeProvider } from '../providers/gitcode/index.js';
 import { GenericGitProvider } from '../providers/git/index.js';
+import { GiteaProvider } from '../providers/gitea/index.js';
 import { providerForRemote } from '../providers/registry.js';
 import type { CommitRef, GitProvider, PullRequestLookup, PullRequestRef } from '../providers/types.js';
 import { fakeGh, resolveGh } from './helpers/fake-gh.js';
@@ -420,6 +421,67 @@ describe('GitCode pull request lookup', () => {
       { url: 'https://gitcode.com/acme/app/pull/5', title: 'Change 5', openedAt: '2026-10-05T10:00:00Z', state: 'merged', closedAt: '2026-10-05T12:00:00Z' },
     ]);
     expect(new URL(String(fetcher.mock.calls[0]?.[0])).searchParams.get('state')).toBe('all');
+  });
+});
+
+describe('Gitea pull request lookup', () => {
+  /** An open pull request as the Gitea API lists it on the configured instance. */
+  const giteaPull = (head: string, number = 7, repo = 'acme/app', url = `http://gitea.internal:3000/acme/app/pulls/${number}`) => ({
+    ...pull(head, repo, number), html_url: url, state: 'open',
+  });
+  beforeEach(() => {
+    vi.stubEnv('GITEA_URL', 'http://gitea.internal:3000');
+    vi.stubEnv('GITEA_TOKEN', 'test-token');
+  });
+
+  it('finds the open request of this repository branch into the target, never one from a fork with the same branch name', async () => {
+    const fetcher = answering([giteaPull(ref.source, 6, 'fork/app'), giteaPull('other', 8), giteaPull(ref.source)]);
+
+    expect(await lookupOf(new GiteaProvider()).findOpen(ref)).toBe('http://gitea.internal:3000/acme/app/pulls/7');
+    const url = new URL(String(fetcher.mock.calls[0]?.[0]));
+    expect([`${url.origin}${url.pathname}`, url.searchParams.get('state')]).toEqual(['http://gitea.internal:3000/api/v1/repos/acme/app/pulls', 'open']);
+  });
+
+  it('fails, rather than finding nothing, on an answer it cannot read or see past', async () => {
+    const giteaLookup = lookupOf(new GiteaProvider());
+    answering({ message: 'token-in-body' }, 401);
+    await expect(giteaLookup.findOpen(ref)).rejects.toThrow(/^Gitea answered the open pull request lookup with HTTP 401\.(?!.*token-in-body)/);
+    answering([{ ...giteaPull(ref.source), html_url: undefined }]);
+    await expect(giteaLookup.findOpen(ref)).rejects.toThrow(/^Gitea answered the open pull request lookup with data TeamAI cannot read\.$/);
+    answering(Array.from({ length: 50 }, (_, index) => giteaPull(`other-${index}`, index)));
+    await expect(giteaLookup.findOpen(ref)).rejects.toThrow('more open pull requests than one page');
+    hanging();
+    await expect(giteaLookup.findOpen({ ...ref, timeoutMs: 20 })).rejects.toThrow();
+  });
+
+  it('lists open, closed and merged requests with how they ended, across every page, never a fork', async () => {
+    const at = (number: number, ended: Record<string, unknown>, repo = 'acme/app') => ({
+      ...giteaPull(ref.source, number, repo), title: `Change ${number}`, created_at: `2026-10-${String(number).padStart(2, '0')}T10:00:00Z`,
+      merged: false, closed_at: null, merged_at: null, ...ended,
+    });
+    // 51 requests: one full page of 50 plus one, of other branches but for the last four.
+    const first = Array.from({ length: 46 }, (_, index) => at(index + 20, { head: { ref: `other-${index}`, repo: { full_name: 'acme/app' } } }));
+    const pages: number[] = [];
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>(async (input) => {
+      const url = new URL(String(input));
+      const page = Number(url.searchParams.get('page') ?? 1);
+      pages.push(page);
+      const body = page === 1
+        ? [...first, at(9, {}), at(8, { state: 'closed', closed_at: '2026-10-08T12:00:00Z' }), at(6, { state: 'closed', closed_at: '2026-10-06T12:00:00Z' }, 'fork/app'), at(5, { state: 'closed', closed_at: '2026-10-05T12:00:00Z', merged: true, merged_at: '2026-10-05T12:00:00Z', merge_commit_sha: 's'.repeat(40), head: { ref: ref.source, sha: 'h'.repeat(40), repo: { full_name: 'acme/app' } } })]
+        : [at(4, { state: 'closed', closed_at: '2026-10-04T12:00:00Z', merged: true, merged_at: '2026-10-04T12:00:00Z', merge_commit_sha: null })];
+
+      return new Response(JSON.stringify(body), { headers: page === 1 ? { 'x-next-page': '2' } : {} });
+    }));
+
+    expect(await lookupOf(new GiteaProvider()).history(ref)).toEqual([
+      { url: 'http://gitea.internal:3000/acme/app/pulls/9', title: 'Change 9', openedAt: '2026-10-09T10:00:00Z', state: 'open' },
+      { url: 'http://gitea.internal:3000/acme/app/pulls/8', title: 'Change 8', openedAt: '2026-10-08T10:00:00Z', state: 'closed', closedAt: '2026-10-08T12:00:00Z' },
+      { url: 'http://gitea.internal:3000/acme/app/pulls/5', title: 'Change 5', openedAt: '2026-10-05T10:00:00Z', state: 'merged', closedAt: '2026-10-05T12:00:00Z', merge: { head: 'h'.repeat(40), commit: 's'.repeat(40) } },
+      { url: 'http://gitea.internal:3000/acme/app/pulls/4', title: 'Change 4', openedAt: '2026-10-04T10:00:00Z', state: 'merged', closedAt: '2026-10-04T12:00:00Z' },
+    ]);
+    expect(pages).toEqual([1, 2]);
+    answering([{ ...at(7, {}), html_url: 'https://evil.example/acme/app/pulls/7' }]);
+    await expect(lookupOf(new GiteaProvider()).history(ref)).rejects.toThrow('on another host');
   });
 });
 

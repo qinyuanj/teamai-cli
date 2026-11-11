@@ -69,6 +69,11 @@ Match the login to the URL's host (do NOT create a second repo):
   the token: add `--provider git` to the `init` in Step 4. Git then uses their
   existing SSH key or credential helper, and `push` leaves the MR for them to open
   on the web.
+- **A Gitea URL** → set `GITEA_URL` to the instance base URL (scheme and port
+  included) and `GITEA_TOKEN` to an access token with `repo` scope before
+  `teamai init`. Every member needs both, even when the team repo already declares
+  `provider: gitea`; the instance is never derived from the repo URL. Without them
+  init fails, or falls back to generic Git and opens no PR.
 - **Other Git hosts, including Azure Repos** → use the existing Git credential
   helper or SSH key. Keep the clone path as provided, including whether it ends
   in `.git`; do not embed HTTPS credentials in the URL.
