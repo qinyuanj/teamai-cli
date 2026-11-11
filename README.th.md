@@ -72,8 +72,11 @@ Skills, Rules, MCP และทรัพยากรอื่นที่ Agent 
 
 ### ติดตั้ง
 
+fork นี้ ([qinyuanj/teamai-cli](https://github.com/qinyuanj/teamai-cli)) เผยแพร่เป็น `@agent/teamai-cli` บน Gitea registry ของตัวเอง ไม่ได้อยู่บน npm สาธารณะ `npx teamai-cli` จะรันแพ็กเกจของ upstream แทน
+
 ```bash
-npm install -g teamai-cli
+npm config set @agent:registry http://lzxsvn:3000/api/packages/agent/npm/
+npm install -g @agent/teamai-cli
 ```
 
 ### ผู้ดูแลทีม / ผู้ใช้คนเดียว

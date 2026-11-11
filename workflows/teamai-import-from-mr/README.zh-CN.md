@@ -66,7 +66,7 @@ flowchart TD
 ## 替换它
 
 ```bash
-cp -r "$(npm root -g)/teamai-cli/workflows/teamai-import-from-mr" workflows/
+cp -r "$(npm root -g)/@agent/teamai-cli/workflows/teamai-import-from-mr" workflows/
 ```
 
 然后编辑提示词，例如在 `draft.en.md` 里加上这一句：

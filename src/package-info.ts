@@ -69,3 +69,45 @@ export function getCurrentVersion(): string {
 export function getCurrentPackageName(): string {
   return loadPackageJson().name;
 }
+
+/** Public npm registry (open-source users). */
+const PUBLIC_REGISTRY = 'https://registry.npmjs.org';
+
+/** Tencent internal tnpm registry (for @tencent/ scoped package). */
+const TNPM_REGISTRY = 'http://r.tnpm.oa.com';
+
+/** Self-hosted Gitea package registry (for the @agent/ scoped fork build). */
+const AGENT_REGISTRY = 'http://lzxsvn:3000/api/packages/agent/npm/';
+
+/**
+ * Resolve the npm registry to use for the given package name.
+ * Scoped packages under `@tencent/` go to tnpm, `@agent/` to the self-hosted
+ * Gitea registry; everything else to public npm.
+ * Honor `TEAMAI_NPM_REGISTRY` env var for manual override (useful for testing
+ * or private mirrors).
+ */
+export function resolveRegistryForPackage(pkgName: string): string {
+  const override = process.env.TEAMAI_NPM_REGISTRY?.trim();
+
+  if (override) return override;
+
+  if (pkgName.startsWith('@tencent/')) return TNPM_REGISTRY;
+
+  if (pkgName.startsWith('@agent/')) return AGENT_REGISTRY;
+
+  return PUBLIC_REGISTRY;
+}
+
+/**
+ * Registry flag for `npm install`. The Gitea registry only hosts the `@agent/`
+ * scope and does not proxy public npm, so a global `--registry` would send
+ * the dependencies (chalk, ...) there and 404; scope the flag instead so they
+ * keep resolving from the user's default registry.
+ */
+export function registryInstallArg(pkgName: string): string {
+  const registry = resolveRegistryForPackage(pkgName);
+
+  if (!process.env.TEAMAI_NPM_REGISTRY?.trim() && pkgName.startsWith('@agent/')) return `--@agent:registry=${registry}`;
+
+  return `--registry=${registry}`;
+}

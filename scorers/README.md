@@ -54,7 +54,7 @@ flowchart TD
 ## Replace one
 
 ```bash
-cp "$(npm root -g)/teamai-cli/scorers/teamai-adoption.md" scorers/
+cp "$(npm root -g)/@agent/teamai-cli/scorers/teamai-adoption.md" scorers/
 ```
 
 Then edit the copy, such as adding a judge model to its frontmatter:

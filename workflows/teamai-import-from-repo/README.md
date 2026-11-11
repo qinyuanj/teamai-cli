@@ -70,7 +70,7 @@ A prompt reads the outputs of the steps it needs, as `{{ steps.<id>.outputs.<fie
 ## Replace it
 
 ```bash
-cp -r "$(npm root -g)/teamai-cli/workflows/teamai-import-from-repo" workflows/
+cp -r "$(npm root -g)/@agent/teamai-cli/workflows/teamai-import-from-repo" workflows/
 ```
 
 Then edit the prompt, such as adding this to `narrative.md`:

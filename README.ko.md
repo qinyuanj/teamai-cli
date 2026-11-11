@@ -72,8 +72,11 @@ Skills, Rules, MCP 등 Agent가 사용할 수 있는 리소스는 모두 공유�
 
 ### 설치
 
+이 fork([qinyuanj/teamai-cli](https://github.com/qinyuanj/teamai-cli))는 `@agent/teamai-cli`로 자체 Gitea registry에 게시되며, 공개 npm에는 없습니다. `npx teamai-cli`는 업스트림 패키지를 실행합니다.
+
 ```bash
-npm install -g teamai-cli
+npm config set @agent:registry http://lzxsvn:3000/api/packages/agent/npm/
+npm install -g @agent/teamai-cli
 ```
 
 ### 팀 관리자 / 개인 사용자

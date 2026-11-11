@@ -1352,7 +1352,7 @@ describe 为调用它的会话提议每个输入并附 `why`：会话第一次�
 从包里自带的文件开始，修改、推送，再 pull：
 
 ```bash
-cp "$(npm root -g)/teamai-cli/workflows/teamai-share-learnings.yaml" workflows/teamai-share-learnings.yaml
+cp "$(npm root -g)/@agent/teamai-cli/workflows/teamai-share-learnings.yaml" workflows/teamai-share-learnings.yaml
 ```
 
 有三个默认工作流是文件夹，在包中位于 `workflows/<name>/WORKFLOW.yaml`，早期版本是 `workflows/<name>.yaml`：`teamai-import-from-mr`、`teamai-codebase-deep-enrich` 和 `teamai-import-from-repo`。团队已有的 `workflows/<name>.yaml` 仍会替换默认工作流。
@@ -1360,7 +1360,7 @@ cp "$(npm root -g)/teamai-cli/workflows/teamai-share-learnings.yaml" workflows/t
 文件夹形式的默认工作流要整个复制到相同路径。比如想让英文的 MR learning 写出评审留下的未决问题，先复制 `teamai-import-from-mr`：
 
 ```bash
-cp -R "$(npm root -g)/teamai-cli/workflows/teamai-import-from-mr" workflows/
+cp -R "$(npm root -g)/@agent/teamai-cli/workflows/teamai-import-from-mr" workflows/
 ```
 
 在它的英文提示词 `workflows/teamai-import-from-mr/draft.en.md` 中加一节：

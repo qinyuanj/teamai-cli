@@ -18,7 +18,7 @@ import { askConfirmation, isInteractive } from './utils/prompt.js';
 // so both this module and the provider registry can read package metadata
 // without pulling in update.ts' dependency graph. They are re-exported here
 // for backwards compatibility with existing callers of `./update.js`.
-import { getCurrentVersion, getCurrentPackageName } from './package-info.js';
+import { getCurrentVersion, getCurrentPackageName, resolveRegistryForPackage, registryInstallArg } from './package-info.js';
 import { isVoltaPackageImage, prefixFromEntryPath } from './install-prefix.js';
 import { compareVersions } from './version.js';
 import {
@@ -31,7 +31,7 @@ import {
   type InstallationRecord,
 } from './installations.js';
 
-export { getCurrentVersion, getCurrentPackageName };
+export { getCurrentVersion, getCurrentPackageName, resolveRegistryForPackage, registryInstallArg };
 
 export { isVoltaPackageImage, prefixFromEntryPath } from './install-prefix.js';
 
@@ -41,31 +41,9 @@ const execFileAsync = promisify(execFile);
 
 // ─── Constants ──────────────────────────────────────────
 
-/** Public npm registry (open-source users). */
-const PUBLIC_REGISTRY = 'https://registry.npmjs.org';
-
-/** Tencent internal tnpm registry (for @tencent/ scoped package). */
-const TNPM_REGISTRY = 'http://r.tnpm.oa.com';
-
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 
 // ─── Helpers ────────────────────────────────────────────
-
-/**
- * Resolve the npm registry to use for the given package name.
- * Scoped packages under `@tencent/` go to tnpm; everything else to public npm.
- * Honor `TEAMAI_NPM_REGISTRY` env var for manual override (useful for testing
- * or private mirrors).
- */
-export function resolveRegistryForPackage(pkgName: string): string {
-  const override = process.env.TEAMAI_NPM_REGISTRY?.trim();
-
-  if (override) return override;
-
-  if (pkgName.startsWith('@tencent/')) return TNPM_REGISTRY;
-
-  return PUBLIC_REGISTRY;
-}
 
 const KilledErrorSchema = z.object({ killed: z.literal(true) });
 
@@ -1021,7 +999,6 @@ async function updateRegisteredCopy(
   record: InstallationRecord,
   latest: string,
   pkgName: string,
-  registry: string,
 ): Promise<boolean> {
   const pkgDir = packageDirFromEntry(record.entry);
   const prefix = record.prefix;
@@ -1061,7 +1038,7 @@ async function updateRegisteredCopy(
         ...npm.args,
         'install', '-g', `${pkgName}@${latest}`,
         `--prefix=${prefix}`,
-        `--registry=${registry}`,
+        registryInstallArg(pkgName),
       ],
       { timeout: INSTALL_TIMEOUT, windowsHide: true, maxBuffer: 16 * 1024 * 1024 },
     );
@@ -1179,7 +1156,6 @@ export async function doUpdate(runningScope: LocalConfig | null, options?: { for
         otherCandidate,
         result.latest,
         pkgName,
-        resolveRegistryForPackage(pkgName),
       );
 
       return updated ? 'ok' : 'failed';
@@ -1212,7 +1188,6 @@ export async function doUpdate(runningScope: LocalConfig | null, options?: { for
   // Refuse unsupported install layouts before prompting, so nobody confirms
   // an update that is then skipped.
   const pkgName = getCurrentPackageName();
-  const registry = resolveRegistryForPackage(pkgName);
   const target = resolveInstallPrefix();
 
   if (!target) {
@@ -1226,7 +1201,7 @@ export async function doUpdate(runningScope: LocalConfig | null, options?: { for
       `Self-update skipped: teamai is running from ${root}, which is not an npm install ` +
       'it can update in place (for example an `npm link` checkout). For a checkout, pull ' +
       'and rebuild it; to switch to the published package, run ' +
-      `"npm install -g ${pkgName} --registry=${registry}".`;
+      `"npm install -g ${pkgName} ${registryInstallArg(pkgName)}".`;
 
     reportUnsupportedUpdate(message, options?.automatic === true);
 
@@ -1304,7 +1279,7 @@ export async function doUpdate(runningScope: LocalConfig | null, options?: { for
         ...npm.args,
         'install', '-g', `${pkgName}@${result.latest}`,
         `--prefix=${target.prefix}`,
-        `--registry=${registry}`,
+        registryInstallArg(pkgName),
       ],
       { timeout: INSTALL_TIMEOUT, windowsHide: true, maxBuffer: 16 * 1024 * 1024 },
     );
@@ -1414,7 +1389,7 @@ export async function doUpdate(runningScope: LocalConfig | null, options?: { for
         ? ` and its command (${restoredBins.join(', ')}).`
         : '.';
     } else if (!fs.existsSync(path.join(pkgDir, CLI_ENTRY))) {
-      message += ` ${pkgDir} is missing: reinstall with "npm install -g ${pkgName}".`;
+      message += ` ${pkgDir} is missing: reinstall with "npm install -g ${pkgName} ${registryInstallArg(pkgName)}".`;
     }
 
     log.warn(message);

@@ -196,7 +196,7 @@ $ teamai digest --json --scorer review-quality --suite benchmarks/regressions --
 }
 ```
 
-The threshold is the `if` of `improve`. To start from one failure, [override the default](workflow.md#override-a-default) with `cp "$(npm root -g)/teamai-cli/workflows/teamai-self-improvement.yaml" workflows/` in the team repo, change that line, push and pull. The dashboard reads the same `if` to say whether a scorer is ready:
+The threshold is the `if` of `improve`. To start from one failure, [override the default](workflow.md#override-a-default) with `cp "$(npm root -g)/@agent/teamai-cli/workflows/teamai-self-improvement.yaml" workflows/` in the team repo, change that line, push and pull. The dashboard reads the same `if` to say whether a scorer is ready:
 
 ```diff
    - id: improve

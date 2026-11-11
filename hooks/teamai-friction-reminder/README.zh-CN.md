@@ -56,7 +56,7 @@ flowchart TD
 ## 替换它
 
 ```bash
-cp -r "$(npm root -g)/teamai-cli/hooks/teamai-friction-reminder" hooks/
+cp -r "$(npm root -g)/@agent/teamai-cli/hooks/teamai-friction-reminder" hooks/
 ```
 
 ```yaml

@@ -31,7 +31,7 @@ teamai workflow start teamai-share-learnings --describe
 ## Replace one
 
 ```bash
-cp "$(npm root -g)/teamai-cli/workflows/teamai-share-learnings-from-sessions.yaml" workflows/
+cp "$(npm root -g)/@agent/teamai-cli/workflows/teamai-share-learnings-from-sessions.yaml" workflows/
 ```
 
 ```yaml

@@ -37,7 +37,7 @@ teamai 按上面的顺序，用空格把要打印的文案连起来。
 ## 替换它
 
 ```bash
-cp -r "$(npm root -g)/teamai-cli/hooks/teamai-env-hint" hooks/
+cp -r "$(npm root -g)/@agent/teamai-cli/hooks/teamai-env-hint" hooks/
 ```
 
 `hooks/teamai-env-hint/exec.md`：

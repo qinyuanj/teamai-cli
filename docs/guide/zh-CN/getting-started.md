@@ -15,7 +15,7 @@
 
    在 AI 工具里：
    ```text
-   安装 teamai skill：https://github.com/Tencent/teamai-cli/tree/main/skills/teamai ，加载 teamai skill，然后从零为我的团队搭建 TeamAI。
+   安装 teamai skill：https://github.com/qinyuanj/teamai-cli/tree/main/skills/teamai ，加载 teamai skill，然后从零为我的团队搭建 TeamAI。
    ```
    或在终端里：
    ```bash

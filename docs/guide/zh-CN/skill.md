@@ -9,7 +9,7 @@
 先装上这个 skill：
 
 ```text
-安装 teamai skill：https://github.com/Tencent/teamai-cli/tree/main/skills/teamai ，然后加载它。
+安装 teamai skill：https://github.com/qinyuanj/teamai-cli/tree/main/skills/teamai ，然后加载它。
 ```
 
 GitHub 打不开时：

@@ -15,7 +15,7 @@
 
    In your AI tool:
    ```text
-   Install the teamai skill: https://github.com/Tencent/teamai-cli/tree/main/skills/teamai , load the teamai skill, then set up TeamAI for my team from scratch.
+   Install the teamai skill: https://github.com/qinyuanj/teamai-cli/tree/main/skills/teamai , load the teamai skill, then set up TeamAI for my team from scratch.
    ```
    Or in a terminal:
    ```bash

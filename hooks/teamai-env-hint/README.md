@@ -37,7 +37,7 @@ teamai joins the texts it prints with a space, in the order above.
 ## Replace it
 
 ```bash
-cp -r "$(npm root -g)/teamai-cli/hooks/teamai-env-hint" hooks/
+cp -r "$(npm root -g)/@agent/teamai-cli/hooks/teamai-env-hint" hooks/
 ```
 
 `hooks/teamai-env-hint/exec.md`:

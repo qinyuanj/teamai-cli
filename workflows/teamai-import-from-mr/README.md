@@ -66,7 +66,7 @@ A prompt reads the outputs of the steps it needs, as `{{ steps.<id>.outputs.<fie
 ## Replace it
 
 ```bash
-cp -r "$(npm root -g)/teamai-cli/workflows/teamai-import-from-mr" workflows/
+cp -r "$(npm root -g)/@agent/teamai-cli/workflows/teamai-import-from-mr" workflows/
 ```
 
 Then edit the prompts, such as adding this to `draft.en.md`:

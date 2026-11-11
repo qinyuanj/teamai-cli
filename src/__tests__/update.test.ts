@@ -135,6 +135,8 @@ import {
   isVoltaPackageImage,
   restoreInterruptedInstall,
   restoreInterruptedBins,
+  resolveRegistryForPackage,
+  registryInstallArg,
 } from '../update.js';
 import { resolveTeamaiEntryScript } from '../builtin-hooks.js';
 import type { LocalConfig } from '../types.js';
@@ -236,6 +238,51 @@ beforeEach(() => {
   mockReadInstalledVersion.mockReturnValue(null);
 });
 
+// ─── Unit tests: registries ─────────────────────────────
+
+describe('the fork package', () => {
+  it('is @agent/teamai-cli, so updates come from the Gitea registry', () => {
+    expect(getCurrentPackageName()).toBe('@agent/teamai-cli');
+    expect(resolveRegistryForPackage(getCurrentPackageName())).toBe('http://lzxsvn:3000/api/packages/agent/npm/');
+  });
+});
+
+describe('resolveRegistryForPackage', () => {
+  it('routes each scope to its own registry', () => {
+    expect(resolveRegistryForPackage('teamai-cli')).toBe('https://registry.npmjs.org');
+    expect(resolveRegistryForPackage('@tencent/teamai-cli')).toBe('http://r.tnpm.oa.com');
+    expect(resolveRegistryForPackage('@agent/teamai-cli')).toBe('http://lzxsvn:3000/api/packages/agent/npm/');
+  });
+
+  it('lets TEAMAI_NPM_REGISTRY override every scope', () => {
+    vi.stubEnv('TEAMAI_NPM_REGISTRY', 'http://mirror.internal/npm/');
+    try {
+      expect(resolveRegistryForPackage('@agent/teamai-cli')).toBe('http://mirror.internal/npm/');
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+});
+
+describe('registryInstallArg', () => {
+  // The Gitea registry hosts only @agent and proxies nothing, so a global
+  // --registry would send the dependencies (chalk, ...) there and 404.
+  it('scopes the Gitea registry to @agent so dependencies resolve from the default registry', () => {
+    expect(registryInstallArg('@agent/teamai-cli')).toBe('--@agent:registry=http://lzxsvn:3000/api/packages/agent/npm/');
+    expect(registryInstallArg('@tencent/teamai-cli')).toBe('--registry=http://r.tnpm.oa.com');
+    expect(registryInstallArg('teamai-cli')).toBe('--registry=https://registry.npmjs.org');
+  });
+
+  it('passes TEAMAI_NPM_REGISTRY as a global --registry', () => {
+    vi.stubEnv('TEAMAI_NPM_REGISTRY', 'http://mirror.internal/npm/');
+    try {
+      expect(registryInstallArg('@agent/teamai-cli')).toBe('--registry=http://mirror.internal/npm/');
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+});
+
 // ─── Unit tests: compareVersions ────────────────────────
 
 describe('compareVersions', () => {
@@ -280,6 +327,8 @@ describe('compareVersions', () => {
     expect(compareVersions('1.2.3-alpha.1', '1.2.3-beta.0')).toBe(-1);
     expect(compareVersions('1.2.3-alpha', '1.2.3-alpha.1')).toBe(-1);
     expect(compareVersions('1.2.3-1', '1.2.3-alpha')).toBe(-1);
+    expect(compareVersions('1.0.0-alpha-beta', '1.0.0-alpha.1')).toBe(1);
+    expect(compareVersions('1.0.0-gitea-1', '1.0.0-gitea.0')).toBe(1);
   });
 
   it('should see a release as newer than a -gitea prerelease of an older core', () => {
@@ -470,9 +519,14 @@ describe('doUpdate', () => {
     }
     expect(mockedExecSync).toHaveBeenCalledWith(
       expect.any(String),
-      expect.arrayContaining(['install', '-g', `${getCurrentPackageName()}@99.0.0`]),
+      expect.arrayContaining([
+        'install', '-g', '@agent/teamai-cli@99.0.0',
+        '--@agent:registry=http://lzxsvn:3000/api/packages/agent/npm/',
+      ]),
       expect.any(Object),
     );
+    // A global --registry would send the dependencies to Gitea, which 404s them.
+    expect(mockedExecSync.mock.calls[1]?.[1]).not.toContainEqual(expect.stringMatching(/^--registry=/));
     expect(mockedLog.success).toHaveBeenCalledWith(
       expect.stringContaining('Updated teamai to v99.0.0'),
     );
@@ -1302,6 +1356,8 @@ describe('isVoltaPackageImage', () => {
 });
 
 describe('prefixFromEntryPath', () => {
+  // The sanity check looks for the *running* package (scoped on this fork).
+  const pkgDir = path.join(...getCurrentPackageName().split('/'));
   let existsSpy: MockInstance<typeof fs.existsSync>;
 
   beforeEach(() => {
@@ -1312,22 +1368,22 @@ describe('prefixFromEntryPath', () => {
   });
 
   it('strips the POSIX lib/ nesting and hands npm the prefix it expects', () => {
-    const entry = path.join('/usr', 'local', 'lib', 'node_modules', 'teamai-cli', 'dist', 'index.js');
+    const entry = path.join('/usr', 'local', 'lib', 'node_modules', pkgDir, 'dist', 'index.js');
     existsSpy.mockReturnValue(true);
 
     expect(prefixFromEntryPath(entry, true)).toEqual({ prefix: path.join('/usr', 'local'), global: true });
     // The sanity check must look under <prefix>/lib/node_modules/<pkg>.
     expect(existsSpy).toHaveBeenCalledWith(
-      path.join('/usr', 'local', 'lib', 'node_modules', 'teamai-cli'),
+      path.join('/usr', 'local', 'lib', 'node_modules', pkgDir),
     );
   });
 
   it('returns the slice before node_modules on Windows layouts', () => {
-    const entry = path.join('C:', 'tools', 'node_modules', 'teamai-cli', 'dist', 'index.js');
+    const entry = path.join('C:', 'tools', 'node_modules', pkgDir, 'dist', 'index.js');
     existsSpy.mockReturnValue(true);
 
     expect(prefixFromEntryPath(entry, false)).toEqual({ prefix: path.join('C:', 'tools'), global: true });
-    expect(existsSpy).toHaveBeenCalledWith(path.join('C:', 'tools', 'node_modules', 'teamai-cli'));
+    expect(existsSpy).toHaveBeenCalledWith(path.join('C:', 'tools', 'node_modules', pkgDir));
   });
 
   it('detects the flat vendored layout on POSIX (no lib component)', () => {
@@ -1335,21 +1391,21 @@ describe('prefixFromEntryPath', () => {
     // nesting npm -g would create. The sanity check must verify the layout
     // that was actually matched — not <prefix>/lib/node_modules/<pkg>, which
     // does not exist here.
-    const entry = path.join('/home', 'u', '.teamai', 'node_modules', 'teamai-cli', 'dist', 'index.js');
+    const entry = path.join('/home', 'u', '.teamai', 'node_modules', pkgDir, 'dist', 'index.js');
     existsSpy.mockReturnValue(true);
 
     expect(prefixFromEntryPath(entry, true)).toEqual({ prefix: path.join('/home', 'u', '.teamai'), global: false });
     expect(existsSpy).toHaveBeenCalledWith(
-      path.join('/home', 'u', '.teamai', 'node_modules', 'teamai-cli'),
+      path.join('/home', 'u', '.teamai', 'node_modules', pkgDir),
     );
   });
 
   it('keeps non-lib roots on POSIX (project-local installs)', () => {
-    const entry = path.join('/home', 'u', 'proj', 'node_modules', 'teamai-cli', 'dist', 'index.js');
+    const entry = path.join('/home', 'u', 'proj', 'node_modules', pkgDir, 'dist', 'index.js');
     existsSpy.mockReturnValue(true);
 
     expect(prefixFromEntryPath(entry, true)).toEqual({ prefix: path.join('/home', 'u', 'proj'), global: false });
-    expect(existsSpy).toHaveBeenCalledWith(path.join('/home', 'u', 'proj', 'node_modules', 'teamai-cli'));
+    expect(existsSpy).toHaveBeenCalledWith(path.join('/home', 'u', 'proj', 'node_modules', pkgDir));
   });
 
   it('returns null for paths outside an npm-managed layout', () => {
@@ -1359,12 +1415,12 @@ describe('prefixFromEntryPath', () => {
   });
 
   it('returns null when the package dir is not under the derived prefix', () => {
-    const entry = path.join('/usr', 'local', 'lib', 'node_modules', 'teamai-cli', 'dist', 'index.js');
+    const entry = path.join('/usr', 'local', 'lib', 'node_modules', pkgDir, 'dist', 'index.js');
     existsSpy.mockReturnValue(false);
 
     expect(prefixFromEntryPath(entry, true)).toBeNull();
     expect(existsSpy).toHaveBeenCalledWith(
-      path.join('/usr', 'local', 'lib', 'node_modules', 'teamai-cli'),
+      path.join('/usr', 'local', 'lib', 'node_modules', pkgDir),
     );
   });
 });
@@ -1379,7 +1435,7 @@ function stubPlatform(value: NodeJS.Platform): () => void {
 }
 
 describe('self-update install-target safety', () => {
-  const FLAT_ENTRY = path.join('/home', 'u', '.teamai', 'node_modules', 'teamai-cli', 'dist', 'update.js');
+  const FLAT_ENTRY = path.join('/home', 'u', '.teamai', 'node_modules', '@agent', 'teamai-cli', 'dist', 'update.js');
   const mockedEntry = resolveTeamaiEntryScript as Mock;
   let existsSpy: MockInstance<typeof fs.existsSync>;
   let readSpy: MockInstance<typeof fs.readFileSync>;
@@ -1469,6 +1525,10 @@ describe('self-update install-target safety', () => {
     // Hooks send stderr to /dev/null; debug.log is where the warning survives.
     expect(mockedLog.persist).toHaveBeenCalledWith(skipped);
     expect(mockedLog.success).not.toHaveBeenCalled();
+    // The suggested command must run: a global --registry would 404 the dependencies.
+    expect(mockedLog.persist).toHaveBeenCalledWith(expect.stringContaining(
+      `"npm install -g @agent/teamai-cli --@agent:registry=http://lzxsvn:3000/api/packages/agent/npm/"`,
+    ));
   });
 
   it('refuses a linked checkout before asking to confirm under the prompt policy', async () => {
@@ -1539,7 +1599,7 @@ describe('restoreInterruptedInstall', () => {
 
   beforeEach(() => {
     nodeModules = fs.mkdtempSync(path.join(os.tmpdir(), 'teamai-restore-'));
-    staging = path.join(nodeModules, `.${getCurrentPackageName()}-LOnt5kfB`);
+    staging = path.join(nodeModules, '@agent', '.teamai-cli-LOnt5kfB');
   });
   afterEach(() => {
     fs.rmSync(nodeModules, { recursive: true, force: true });
@@ -1556,8 +1616,8 @@ describe('restoreInterruptedInstall', () => {
   });
 
   it('restores the newest leftover when several were left behind', () => {
-    const older = path.join(nodeModules, `.${getCurrentPackageName()}-AAA`);
-    const newer = path.join(nodeModules, `.${getCurrentPackageName()}-BBB`);
+    const older = path.join(nodeModules, '@agent', '.teamai-cli-AAA');
+    const newer = path.join(nodeModules, '@agent', '.teamai-cli-BBB');
 
     fs.mkdirSync(older, { recursive: true });
     fs.mkdirSync(newer, { recursive: true });
@@ -1611,7 +1671,7 @@ describe('restoreInterruptedInstall', () => {
     expect(restoreInterruptedInstall(pkgDir)).toBe(staging);
     expect(fs.readFileSync(path.join(pkgDir, 'package.json'), 'utf-8')).toContain('0.21.0');
     // The empty directory is moved aside, not deleted.
-    const setAside = fs.readdirSync(nodeModules).filter((entry) => entry.includes('incomplete-'));
+    const setAside = fs.readdirSync(path.dirname(pkgDir)).filter((entry) => entry.includes('incomplete-'));
     expect(setAside).toHaveLength(1);
   });
 
@@ -1686,7 +1746,7 @@ describe('restoreInterruptedBins', () => {
   });
 
   it('leaves the moved-aside package directory alone', () => {
-    fs.mkdirSync(path.join(prefix, 'lib', 'node_modules', '.teamai-cli-38m3aZH1'));
+    fs.mkdirSync(path.join(prefix, 'lib', 'node_modules', '@agent', '.teamai-cli-38m3aZH1'), { recursive: true });
 
     expect(restoreInterruptedBins(pkgDir, prefix)).toEqual([]);
   });
@@ -1696,7 +1756,7 @@ describe('registered copies (#1753)', () => {
   const current = getCurrentVersion();
   const record = {
     id: 'other-copy',
-    entry: '/other/lib/node_modules/teamai-cli/dist/installations.js',
+    entry: '/other/lib/node_modules/@agent/teamai-cli/dist/installations.js',
     version: '0.21.0',
     method: 'npm-global' as const,
     prefix: '/other',
@@ -1746,7 +1806,10 @@ describe('registered copies (#1753)', () => {
     expect(mockedExecSync).toHaveBeenCalledTimes(1);
     expect(mockedExecSync).toHaveBeenCalledWith(
       expect.any(String),
-      expect.arrayContaining(['install', '-g', `${getCurrentPackageName()}@${current}`, '--prefix=/other']),
+      expect.arrayContaining([
+        'install', '-g', `${getCurrentPackageName()}@${current}`, '--prefix=/other',
+        registryInstallArg(getCurrentPackageName()),
+      ]),
       expect.objectContaining({ windowsHide: true }),
     );
     expect(mockSetInstallationUpdate).toHaveBeenCalledWith(
@@ -1859,7 +1922,7 @@ describe('install that dies after moving the package aside', () => {
     await expect(doUpdate(null)).resolves.toBe('failed');
 
     expect(mockedLog.persist).toHaveBeenCalledWith(
-      expect.stringContaining(`reinstall with "npm install -g ${getCurrentPackageName()}"`),
+      expect.stringContaining(`reinstall with "npm install -g ${getCurrentPackageName()} ${registryInstallArg(getCurrentPackageName())}"`),
     );
   });
 

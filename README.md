@@ -72,8 +72,11 @@ Once a teammate is set up, they just open their agent and already have the team'
 
 ### Install
 
+This fork ([qinyuanj/teamai-cli](https://github.com/qinyuanj/teamai-cli)) is published as `@agent/teamai-cli` to its Gitea registry, not to public npm. `npx teamai-cli` runs the upstream package instead.
+
 ```bash
-npm install -g teamai-cli
+npm config set @agent:registry http://lzxsvn:3000/api/packages/agent/npm/
+npm install -g @agent/teamai-cli
 ```
 
 ### Team admin / solo user

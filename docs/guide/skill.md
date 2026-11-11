@@ -9,7 +9,7 @@ Talk to it with `/teamai` inside an AI tool. The skill is there for convenience:
 Install the skill first:
 
 ```text
-Install the teamai skill: https://github.com/Tencent/teamai-cli/tree/main/skills/teamai , then load it.
+Install the teamai skill: https://github.com/qinyuanj/teamai-cli/tree/main/skills/teamai , then load it.
 ```
 
 Then you can say:

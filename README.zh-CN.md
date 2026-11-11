@@ -78,8 +78,11 @@ Skills、Rules、MCP 等 Agent 能用的资源都可以分享：
 
 ### 安装
 
+本 fork（[qinyuanj/teamai-cli](https://github.com/qinyuanj/teamai-cli)）以 `@agent/teamai-cli` 发布在自己的 Gitea registry，不在公共 npm 上。`npx teamai-cli` 运行的是上游的包。
+
 ```bash
-npm install -g teamai-cli
+npm config set @agent:registry http://lzxsvn:3000/api/packages/agent/npm/
+npm install -g @agent/teamai-cli
 ```
 
 ### 团队管理员 / 个人使用者

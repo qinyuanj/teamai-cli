@@ -25,7 +25,7 @@ flowchart TD
 ## Replace it
 
 ```bash
-cp -r "$(npm root -g)/teamai-cli/hooks/teamai-package-hint" hooks/
+cp -r "$(npm root -g)/@agent/teamai-cli/hooks/teamai-package-hint" hooks/
 ```
 
 `hooks/teamai-package-hint/message.md`:

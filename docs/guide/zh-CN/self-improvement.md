@@ -195,7 +195,7 @@ $ teamai digest --json --scorer review-quality --suite benchmarks/regressions --
 }
 ```
 
-阈值就是 `improve` 的 `if`。要从一个失败开始，在团队仓库里用 `cp "$(npm root -g)/teamai-cli/workflows/teamai-self-improvement.yaml" workflows/` [覆盖默认工作流](workflow.md#覆盖默认工作流)，改这一行，推送并 pull。仪表盘读同一个 `if` 来判断评分器是否可以运行：
+阈值就是 `improve` 的 `if`。要从一个失败开始，在团队仓库里用 `cp "$(npm root -g)/@agent/teamai-cli/workflows/teamai-self-improvement.yaml" workflows/` [覆盖默认工作流](workflow.md#覆盖默认工作流)，改这一行，推送并 pull。仪表盘读同一个 `if` 来判断评分器是否可以运行：
 
 ```diff
    - id: improve

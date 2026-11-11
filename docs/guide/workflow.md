@@ -1352,7 +1352,7 @@ describe proposes each input for the calling session with a `why`: the commit it
 Start from the file the package ships, edit it, push it, and pull:
 
 ```bash
-cp "$(npm root -g)/teamai-cli/workflows/teamai-share-learnings.yaml" workflows/teamai-share-learnings.yaml
+cp "$(npm root -g)/@agent/teamai-cli/workflows/teamai-share-learnings.yaml" workflows/teamai-share-learnings.yaml
 ```
 
 Three defaults are folders, at `workflows/<name>/WORKFLOW.yaml` in the package where earlier releases had `workflows/<name>.yaml`: `teamai-import-from-mr`, `teamai-codebase-deep-enrich` and `teamai-import-from-repo`. A `workflows/<name>.yaml` your team already has still replaces the default.
@@ -1360,7 +1360,7 @@ Three defaults are folders, at `workflows/<name>/WORKFLOW.yaml` in the package w
 A default that is a folder is copied whole, to the same path. To have MR learnings in English name what the review left open, copy `teamai-import-from-mr`:
 
 ```bash
-cp -R "$(npm root -g)/teamai-cli/workflows/teamai-import-from-mr" workflows/
+cp -R "$(npm root -g)/@agent/teamai-cli/workflows/teamai-import-from-mr" workflows/
 ```
 
 add a section to its English prompt, `workflows/teamai-import-from-mr/draft.en.md`:

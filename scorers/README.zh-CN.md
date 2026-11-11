@@ -54,7 +54,7 @@ flowchart TD
 ## 替换其中一个
 
 ```bash
-cp "$(npm root -g)/teamai-cli/scorers/teamai-adoption.md" scorers/
+cp "$(npm root -g)/@agent/teamai-cli/scorers/teamai-adoption.md" scorers/
 ```
 
 然后编辑副本，例如在 frontmatter 里加上评审模型：

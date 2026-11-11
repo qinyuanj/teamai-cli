@@ -39,7 +39,7 @@ pull 会把 CRLF 换成 LF，并去掉末尾的一个换行。这些文件里没
 ## 替换它
 
 ```bash
-cp -r "$(npm root -g)/teamai-cli/rules/teamai-recall" rules/
+cp -r "$(npm root -g)/@agent/teamai-cli/rules/teamai-recall" rules/
 ```
 
 然后在每个 `RULE*.md` 里加上你自己的文字，例如一个跳过条件：

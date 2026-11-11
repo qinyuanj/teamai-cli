@@ -459,7 +459,7 @@ agy 随后拒绝该命令：`tool call denied by pre-tool hook: rm -rf is blocke
 teamai 自带提示的阈值和文案也放在 hook 目录里。在团队仓库根目录放一个同名目录，就能替换它。比如只在较长的会话后提醒，并换成团队自己的话：
 
 ```bash
-cp -r "$(npm root -g)/teamai-cli/hooks/teamai-friction-reminder" hooks/
+cp -r "$(npm root -g)/@agent/teamai-cli/hooks/teamai-friction-reminder" hooks/
 ```
 
 ```yaml

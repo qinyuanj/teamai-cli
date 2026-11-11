@@ -29,7 +29,7 @@ flowchart TD
 ## 替换它
 
 ```bash
-cp -r "$(npm root -g)/teamai-cli/hooks/teamai-todowrite-hint" hooks/
+cp -r "$(npm root -g)/@agent/teamai-cli/hooks/teamai-todowrite-hint" hooks/
 ```
 
 `hooks/teamai-todowrite-hint/message.md`：

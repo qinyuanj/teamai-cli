@@ -66,7 +66,7 @@ A prompt reads `{{ inputs.<name> }}`, `{{ item.<field> }}` inside a step that ru
 ## Replace it
 
 ```bash
-cp -r "$(npm root -g)/teamai-cli/workflows/teamai-codebase-deep-enrich" workflows/
+cp -r "$(npm root -g)/@agent/teamai-cli/workflows/teamai-codebase-deep-enrich" workflows/
 ```
 
 Then edit the prompts, such as adding this to `component.md`:

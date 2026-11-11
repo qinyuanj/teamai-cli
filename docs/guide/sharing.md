@@ -468,7 +468,7 @@ agy then refuses the command with `tool call denied by pre-tool hook: rm -rf is 
 teamai's own hints keep their thresholds and texts in hook folders. A folder of the same name at the root of the team repo replaces one. To remind only after longer sessions, in the team's words:
 
 ```bash
-cp -r "$(npm root -g)/teamai-cli/hooks/teamai-friction-reminder" hooks/
+cp -r "$(npm root -g)/@agent/teamai-cli/hooks/teamai-friction-reminder" hooks/
 ```
 
 ```yaml

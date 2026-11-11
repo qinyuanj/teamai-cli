@@ -27,11 +27,11 @@ function writeInventory(records: InstallationRecord[]): void {
 }
 
 function npmCopy(prefix: string, version: string, seen = '2026-11-09T00:00:00.000Z'): InstallationRecord {
-  const pkgDir = path.join(prefix, 'lib', 'node_modules', 'teamai-cli');
+  const pkgDir = path.join(prefix, 'lib', 'node_modules', '@agent/teamai-cli');
   const entry = path.join(pkgDir, 'dist', 'installations.js');
 
   fs.mkdirSync(path.dirname(entry), { recursive: true });
-  fs.writeFileSync(path.join(pkgDir, 'package.json'), JSON.stringify({ name: 'teamai-cli', version }));
+  fs.writeFileSync(path.join(pkgDir, 'package.json'), JSON.stringify({ name: '@agent/teamai-cli', version }));
 
   return {
     id: `${version}-${prefix}`,
@@ -79,10 +79,10 @@ describe('describeInstallation', () => {
       'tools',
       'image',
       'packages',
-      'teamai-cli',
+      '@agent/teamai-cli',
       'lib',
       'node_modules',
-      'teamai-cli',
+      '@agent/teamai-cli',
       'dist',
       'installations.js',
     );
@@ -184,7 +184,7 @@ describe('readInstallations', () => {
 });
 
 describe('selectOtherInstallation', () => {
-  const running = (): string => path.join(home, 'running', 'lib', 'node_modules', 'teamai-cli', 'dist', 'installations.js');
+  const running = (): string => path.join(home, 'running', 'lib', 'node_modules', '@agent/teamai-cli', 'dist', 'installations.js');
 
   it('chooses the most recently seen outdated npm-global copy', () => {
     const older = npmCopy(path.join(home, 'a'), '0.27.0', '2026-11-09T08:00:00.000Z');
@@ -201,7 +201,7 @@ describe('selectOtherInstallation', () => {
 
     self.id = describeInstallation(self.entry, self.version).id;
 
-    const volta = { ...npmCopy(path.join(home, '.volta', 'tools', 'image', 'packages', 'teamai-cli'), '0.20.0'), method: 'volta' as const };
+    const volta = { ...npmCopy(path.join(home, '.volta', 'tools', 'image', 'packages', '@agent/teamai-cli'), '0.20.0'), method: 'volta' as const };
     const local = { ...npmCopy(path.join(home, 'checkout'), '0.20.0'), method: 'local' as const, prefix: null };
 
     writeInventory([current, self, volta, local]);
@@ -234,13 +234,13 @@ describe('installationNotes', () => {
   it('names the manual remedy for each unsupported method', () => {
     writeInventory([
       npmCopy(path.join(home, 'a'), '0.28.0'),
-      { ...npmCopy(path.join(home, '.volta', 'tools', 'image', 'packages', 'teamai-cli'), '0.27.0'), method: 'volta' },
+      { ...npmCopy(path.join(home, '.volta', 'tools', 'image', 'packages', '@agent/teamai-cli'), '0.27.0'), method: 'volta' },
       { ...npmCopy(path.join(home, 'checkout'), '0.26.0'), method: 'local', prefix: null },
     ]);
 
     const notes = installationNotes();
 
-    expect(notes.some((note) => note.includes('volta install teamai-cli@latest'))).toBe(true);
+    expect(notes.some((note) => note.includes('volta install @agent/teamai-cli@latest'))).toBe(true);
     expect(notes.some((note) => note.includes('local checkout'))).toBe(true);
     expect(notes.some((note) => note.includes('npm prefix'))).toBe(true);
   });

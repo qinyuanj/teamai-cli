@@ -39,7 +39,7 @@ Pull turns CRLF into LF and drops one trailing newline. The files hold no templa
 ## Replace it
 
 ```bash
-cp -r "$(npm root -g)/teamai-cli/rules/teamai-recall" rules/
+cp -r "$(npm root -g)/@agent/teamai-cli/rules/teamai-recall" rules/
 ```
 
 Then add your own text to each `RULE*.md`, such as a skip condition:
