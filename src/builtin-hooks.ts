@@ -461,7 +461,7 @@ const UNWAITED_POST_TOOL_USE_MATCHER = '^(?!TodoWrite$).*$';
  */
 export const RETIRED_TODOWRITE_HOOK_KEY = 'Hook dispatch post-tool-use TodoWrite';
 
-const BUILTIN_HOOK_SPECS: BuiltinHookSpec[] = [
+export const BUILTIN_HOOK_SPECS: BuiltinHookSpec[] = [
   { key: 'Hook dispatch session-start', event: 'SessionStart', dispatchEvent: 'session-start', matcher: '*', timeoutSec: 15 },
   { key: 'Hook dispatch stop', event: 'Stop', dispatchEvent: 'stop', matcher: '*', timeoutSec: 15 },
   { key: POST_TOOL_USE_WILDCARD_KEY, event: 'PostToolUse', dispatchEvent: 'post-tool-use', matcher: '*', timeoutSec: 10 },
@@ -654,6 +654,8 @@ function renderBuiltinDefs(tool: string, specs: BuiltinHookSpec[], form: Builtin
 interface AdapterBuiltinHooks {
   keys: string[];
   suffix?: string;
+  /** This adapter carried the retired TodoWrite entry, now folded into the wildcard. */
+  todoWriteHint?: true;
 }
 
 /**
@@ -670,6 +672,8 @@ interface AdapterBuiltinHooks {
  */
 const ADAPTER_BUILTIN_HOOKS: Record<HookAdapterId, AdapterBuiltinHooks | null> = {
   'kiro-hooks': { keys: ['Hook dispatch session-start'] },
+  // kimi-hooks.ts writes every built-in into config.toml, as plain dispatch commands.
+  'kimi-hooks': { keys: BUILTIN_HOOK_SPECS.map((spec) => spec.key), todoWriteHint: true },
   // agy-hooks.ts maps the same four events as OMP into agy's hooks.json
   // (SessionStart, PreInvocation, PostToolUse, Stop).
   'agy-hooks': {
@@ -766,6 +770,13 @@ function adapterBuiltinHooks(tool: string): AdapterBuiltinHooks | null {
  */
 export function takesAllBuiltins(tool: string): boolean {
   return adapterBuiltinHooks(tool) === null;
+}
+
+/** Whether this tool had the retired TodoWrite hook whose hint now runs in the wildcard pass. */
+export function hasTodoWriteHint(tool: string): boolean {
+  const adapter = adapterBuiltinHooks(tool);
+
+  return adapter === null || adapter.todoWriteHint === true;
 }
 
 /** §4.8 team override of built-in hooks. Only whitelisted fields are honored. */

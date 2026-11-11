@@ -616,6 +616,20 @@ const COMPLETE_ROWS: readonly MatrixRow[] = [
     source: 'DSH has no project MCP file; a workspace install writes its home patch, as its skills write the project .dsh/skills',
   },
   {
+    tool: 'kimi', scope: 'user',
+    channel: 'none',
+    existingDirs: [],
+    installed: { probe: '~/.kimi-code', met: false },
+    source: 'Kimi Code CLI: teamai writes no MCP config for it',
+  },
+  {
+    tool: 'kimi', scope: 'project',
+    channel: 'none',
+    existingDirs: [],
+    installed: { probe: '<root>/.kimi-code', met: false },
+    source: 'Kimi Code CLI: teamai writes no MCP config for it',
+  },
+  {
     tool: 'tclaude', scope: 'user',
     writes: [{ at: '~/.tclaude/.claude.json', key: ['mcpServers'] }],
     existingDirs: ['~/.tclaude'],

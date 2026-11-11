@@ -63,7 +63,7 @@ const PIPED_PAYLOAD_MAX_BYTES = 16 * 1024;
  * is true in TOOLS (src/tools.ts), which hook-fast-path.test.ts checks this
  * copy against, and git, which runs its handlers inline.
  */
-const FULL_DISPATCH_TOOLS = new Set(['copilot', 'agy', 'git']);
+const FULL_DISPATCH_TOOLS = new Set(['copilot', 'agy', 'kimi', 'git']);
 
 /** The payload fields a session id may come in; without one, the full dispatch derives one the child must share. */
 const SESSION_ID_FIELDS = ['session_id', 'sessionId', 'conversation_id'] as const;

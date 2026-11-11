@@ -1241,6 +1241,36 @@ describe('uninstall', () => {
     expect(summary).toContain('run `teamai hooks remove` here first');
   });
 
+  it('keeps user-level Kimi hooks on a project-scope uninstall and takes them on a user-scope one', async () => {
+    const homeDir = path.join(tmpDir, 'home');
+    const projectRoot = path.join(tmpDir, 'only-project');
+    const repoPath = path.join(projectRoot, '.teamai', 'team-repo');
+    vi.stubEnv('HOME', homeDir);
+    vi.stubEnv('USERPROFILE', homeDir);
+    vi.stubEnv('KIMI_CODE_HOME', path.join(homeDir, '.kimi-code'));
+    await fse.ensureDir(repoPath);
+    const { getKimiConfigPath, hasKimiTeamaiHooks, reconcileKimiHooks } = await import('../kimi-hooks.js');
+    await reconcileKimiHooks('injection');
+    const teamConfig = TeamaiConfigSchema.parse({ team: 't', repo: 'https://example.invalid/t.git', toolPaths: { kimi: { skills: '.kimi-code/skills' } } });
+    const localConfig = makeLocalConfig(homeDir, repoPath, { scope: 'project', projectRoot });
+    mockAutoDetectInit.mockResolvedValue({ localConfig, teamConfig });
+    const printed: string[] = [];
+    const logSpy = vi.spyOn(console, 'log').mockImplementation((line?: unknown) => { printed.push(String(line ?? '')); });
+    try {
+      await uninstall({ force: true });
+    } finally {
+      logSpy.mockRestore();
+    }
+    expect(await hasKimiTeamaiHooks()).toBe(true);
+    expect(printed.join('\n')).toContain(getKimiConfigPath());
+    expect(printed.join('\n')).toContain('run `teamai hooks remove` here first');
+
+    mockAutoDetectInit.mockResolvedValue({ localConfig: { ...localConfig, scope: 'user', projectRoot: undefined }, teamConfig });
+    await uninstall({ force: true });
+    expect(await hasKimiTeamaiHooks()).toBe(false);
+    expect(await fse.pathExists(getKimiConfigPath())).toBe(false);
+  });
+
   it('still removes global Codex hooks on a user-scope uninstall', async () => {
     const homeDir = path.join(tmpDir, 'home');
     const repoPath = path.join(homeDir, '.teamai/team-repo');

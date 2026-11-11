@@ -985,9 +985,9 @@ const todowriteHintHandler: HookHandler = {
  * skill-use.ts treats its own retired key.
  */
 async function todoWriteHintInstalled(tool: string, config: LocalConfig): Promise<boolean> {
-  const { POST_TOOL_USE_WILDCARD_KEY, RETIRED_TODOWRITE_HOOK_KEY, takesAllBuiltins } = await import('./builtin-hooks.js');
+  const { POST_TOOL_USE_WILDCARD_KEY, RETIRED_TODOWRITE_HOOK_KEY, hasTodoWriteHint } = await import('./builtin-hooks.js');
 
-  if (!takesAllBuiltins(tool)) return false;
+  if (!hasTodoWriteHint(tool)) return false;
   const { readBuiltinDisabledListing } = await import('./resources/hooks.js');
 
   for (const key of [RETIRED_TODOWRITE_HOOK_KEY, POST_TOOL_USE_WILDCARD_KEY]) {

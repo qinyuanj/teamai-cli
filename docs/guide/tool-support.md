@@ -25,6 +25,7 @@ Rule folder files: how the tool reads the files a user-scope rule folder names i
 | JoyCode | `~/.joycode` `$JOYCODE_HOME` | written; reads ? | in the blocks file (JoyCode rules.txt) | copy | `~/.joycode/rules.txt` s | `~/.joycode/agents` s<br>indexed by `agent.json` | `~/.joycode/hooks.json` s | — | joycode |
 | Qoder | `~/.qoder` `$QODER_CONFIG_DIR` `$QODER_CLI_HOME/.qoder` | written; reads ? | `~/.qoder/rules` v | copy | `~/.qoder/rules` s | `~/.qoder/agents` s | `~/.qoder/settings.json` s | `~/.qoder/settings.json` s | qoder |
 | Qoder CN | `~/.qoder-cn` `$QODERCN_CONFIG_DIR` `$QODERCN_CLI_HOME/.qoder-cn` | written; reads ? | `~/.qoder-cn/rules` v | copy | `~/.qoder-cn/rules` t | `~/.qoder-cn/agents` s | `~/.qoder-cn/settings.json` s | `~/.qoder-cn/settings.json` s | qoder-cn |
+| Kimi Code | `~/.kimi-code` `$KIMI_CODE_HOME` | `~/.kimi-code/skills` t | in the blocks file (Kimi Code AGENTS.md) | copy | `~/.kimi-code/AGENTS.md` v | `~/.kimi-code/agents` v | kimi-hooks v | — | ? |
 | Kiro | `~/.kiro` | written; reads ? | `~/.kiro/steering` d | copy | `~/.kiro/steering` d | `~/.kiro/agents` d | kiro-hooks d | `~/.kiro/settings/mcp.json` d | — |
 | Trae | `~/.trae` | written; reads ? | written; reads ? | copy | `~/.trae/user_rules` d | ? | ? | — | — |
 | Trae CN | `~/.trae-cn` | written; reads ? | written; reads ? | copy | `~/.trae-cn/user_rules` d | `~/.trae-cn/agents` d | ? | — | — |
@@ -57,6 +58,7 @@ Paths are relative to the project root. `cwd only`: the tool reads it only from 
 | JoyCode | written; reads ? | `.joycode/rules` v | — | `.joycode/agents` s<br>indexed by `agent.json` | `.joycode/hooks.json` s | — |
 | Qoder | written; reads ? | `.qoder/rules` v | `.qoder/rules` s | `.qoder/agents` s | `.qoder/settings.json` s cwd only<br>`.qoder/settings.local.json` s cwd only | `.qoder/settings.json` s |
 | Qoder CN | written; reads ? | `.qoder/rules` v | `.qoder/rules` t | `.qoder/agents` t | `.qoder/settings.json` s cwd only<br>`.qoder/settings.local.json` t cwd only | `.qoder/settings.json` t |
+| Kimi Code | `.kimi-code/skills` v cwd only | in the blocks file (Kimi Code AGENTS.md) | `.kimi-code/AGENTS.md` v cwd only | `.kimi-code/agents` v cwd only | user hooks | — |
 | Kiro | written; reads ? | `.kiro/steering` d | `.kiro/steering` d | `.kiro/agents` d | user hooks | `.kiro/settings/mcp.json` d |
 | Trae | written; reads ? | `.trae/rules` t | `.trae/rules` d | `.trae/agents` s cwd only | ? | `.trae/mcp.json` d |
 | Trae CN | written; reads ? | `.trae/rules` t | `.trae/rules` d | `.trae/agents` s cwd only | ? | `.trae/mcp.json` d |
@@ -89,6 +91,7 @@ User scope, from #1221's matrix; a fix merged since is marked `t`, with a note. 
 | JoyCode | ? | ? | ? | ◐s | ✓t<sup>2</sup> | ✓t | ? | ✓t<sup>1</sup> | ? |
 | Qoder | ? | ? | ? | ◐s | ✓s | ◐t<sup>10</sup> | ✓d | ✓s<sup>11</sup> | ✓s |
 | Qoder CN | ? | ? | ? | ◐s | ✓s | ◐t<sup>10</sup> | ? | ✓s<sup>11</sup> | ✓t<sup>12</sup> |
+| Kimi Code | ? | ? | ? | ? | ? | ? | ? | ? | ? |
 | Kiro | ? | ? | ? | ◐d | ? | ? | ✓d | ✓d<sup>13</sup> | ✓d<sup>14</sup> |
 | Trae | ? | ? | ? | ? | ? | ? | ? | ✓s<sup>15</sup> | ? |
 | Trae CN | ? | ? | ? | ? | ? | ? | ? | ✓s<sup>15</sup> | ? |

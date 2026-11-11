@@ -380,3 +380,12 @@ Doctor measures the serialized project-rules reply in UTF-8 bytes against `hooks
 ## Kiro lifecycle hooks
 
 Kiro CLI V3 loads `~/.kiro/hooks/teamai.json` for every agent, including the default agent. Pull and hook injection install its SessionStart hook without requiring a team agent. Before enabling it, they remove only TeamAI’s old agentSpawn command from existing Kiro agents, including member-edited copies, preserving personal hooks and agent fields. `hooks list` and `doctor` check it; hook removal and user uninstall remove it. Project uninstall preserves this shared user hook. A same-named personal file is kept and reported. Pull removes the old managed `agentSpawn` entry from rendered team agents while preserving custom hooks. Lifecycle integration requires V3; Kiro 2.x does not load this standalone hook. When the team has hooks for Kiro, pull also writes `~/.kiro/hooks/teamai-team.json`, one entry per event that runs them through teamai; hook removal and uninstall remove it too.
+
+## Kimi Code CLI
+
+Kimi Code CLI is a built-in target (`--agent kimi`), detected from `~/.kimi-code` or `$KIMI_CODE_HOME`.
+
+- **Skills** go to `.kimi-code/skills/` and **agent definitions** to `.kimi-code/agents/*.md`. They use Kimi's Markdown frontmatter with `name`, `description` and a list-form `tools` allowlist. Short Kimi tool names stay unchanged (`Task` becomes `Agent`), `model` is not written, and private fields round-trip through `tool_extras.kimi`.
+- **Rules** are a TeamAI-managed block in `.kimi-code/AGENTS.md` in user and workspace scope. Path-scoped rules apply to every task there. Your own content outside the block is kept, and uninstall removes only the managed block.
+- **Culture, shared instructions and the recall block** go to the same `AGENTS.md`. Team agents are removed by name on uninstall; personal agent files are left alone.
+- **Hooks** are `[[hooks]]` entries in `$KIMI_CODE_HOME/config.toml`, whatever the install scope. Uninstall removes only TeamAI's entries, preserving the rest of the file; project uninstall keeps these shared user hooks.

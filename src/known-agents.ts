@@ -107,6 +107,7 @@ export const KNOWN_AGENTS: KnownAgent[] = [
   { id: 'hermes', displayName: 'Hermes', category: 'coding', skillsPath: '.hermes/skills' },
   { id: 'junie', displayName: 'Junie', category: 'coding', skillsPath: '.junie/skills' },
   { id: 'kilocode', displayName: 'KiloCode', category: 'coding', skillsPath: '.kilocode/skills' },
+  { id: 'kimi', displayName: 'Kimi Code', category: 'coding', skillsPath: '.kimi-code/skills' },
   { id: 'kiro', displayName: 'Kiro', category: 'coding', skillsPath: '.kiro/skills' },
   { id: 'ob1', displayName: 'OB1', category: 'coding', skillsPath: '.ob1/skills' },
   { id: 'omp', displayName: 'Oh My Pi', category: 'coding', skillsPath: '.omp/skills' },

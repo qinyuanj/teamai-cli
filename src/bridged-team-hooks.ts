@@ -38,6 +38,8 @@ interface Bridge {
 
 /** Which hook adapters run the team hooks through this bridge: DSH's host plugin runs its Claude file itself. */
 const BRIDGES: Readonly<Record<HookAdapterId, Bridge | null>> = {
+  // Kimi takes the built-ins from config.toml; team hooks have no bridge there.
+  'kimi-hooks': null,
   'opencode-plugin': {
     reply: 'bridge',
     tools: {

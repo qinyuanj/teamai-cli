@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatStopHookOutput, relayWhenHidden, RELAY_TO_USER_PREFIX } from '../utils/hook-output.js';
+import { formatStopHookOutput, kimiHookReply, relayWhenHidden, RELAY_TO_USER_PREFIX } from '../utils/hook-output.js';
 import { stopStdoutUnsupported } from '../utils/tool-names.js';
 
 describe('formatStopHookOutput', () => {
@@ -71,8 +71,18 @@ describe('relayWhenHidden', () => {
   });
 });
 
+describe('kimiHookReply', () => {
+  it('turns additionalContext into message and leaves other replies unchanged', () => {
+    const reply = JSON.stringify({ hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: 'the hint' } });
+
+    expect(JSON.parse(kimiHookReply(reply))).toEqual({ message: 'the hint' });
+    expect(kimiHookReply('plain text')).toBe('plain text');
+    expect(kimiHookReply('{"continue":true}')).toBe('{"continue":true}');
+  });
+});
+
 describe('stopStdoutUnsupported', () => {
-  it.each(['codex', 'codex-internal', 'tcodex', 'Codex', 'TCodex', 'codebuddy', 'workbuddy'])(
+  it.each(['codex', 'codex-internal', 'tcodex', 'Codex', 'TCodex', 'codebuddy', 'workbuddy', 'kimi'])(
     'stashes instead of printing for %s',
     (tool) => {
       expect(stopStdoutUnsupported(tool)).toBe(true);

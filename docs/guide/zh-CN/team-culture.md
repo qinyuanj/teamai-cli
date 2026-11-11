@@ -46,6 +46,7 @@ team:
 | DeepSeek Harness | `$DSH_HOME/AGENTS.md`（未设置时 `~/.dsh/AGENTS.md`） | session-start hook |
 | JoyCode | 设置 `$JOYCODE_HOME` 时为 `$JOYCODE_HOME/rules.txt`，否则为 `~/.joycode/rules.txt` | 无 |
 | Muse Code | `${XDG_CONFIG_HOME:-~/.config}/muse/AGENTS.md` | session-start hook |
+| Kimi Code CLI | `$KIMI_CODE_HOME/AGENTS.md`（未设置时 `~/.kimi-code/AGENTS.md`） | `.kimi-code/AGENTS.md` |
 | Antigravity | `~/.gemini/config/rules/teamai-context.md` | `.agents/rules/teamai-context.md` |
 
 ## 查看效果

@@ -123,6 +123,7 @@ const TOOL_CALL_CASES: ToolCallCase[] = [
   { fixture: 'codex-real-a-cat', tool: 'codex', root: '.codex/skills' },
   { fixture: 'pi-read', tool: 'pi', root: '.pi/agent/skills' },
   { fixture: 'omp-read-uri', tool: 'omp', root: '.omp/agent/skills' },
+  { fixture: 'kimi-skill', tool: 'kimi', root: '.kimi-code/skills' },
 ];
 
 describe('skill use from a tool call (#1221)', () => {
@@ -286,10 +287,13 @@ describe('skill use from a tool call (#1221)', () => {
     expect(await credits()).toEqual([{ skill: SKILL, tool: 'acme-agent' }]);
   });
 
-  it('still counts an OpenCode `Skill` from a plugin loaded before the upgrade', async () => {
-    install('.config/opencode/skills');
-    await toolCall({ ...fixture('opencode-skill'), tool_name: 'Skill' }, 'opencode');
-    expect(await credits()).toEqual([{ skill: SKILL, tool: 'opencode' }]);
+  it.each([
+    { tool: 'opencode', fixtureName: 'opencode-skill', root: '.config/opencode/skills' },
+    { tool: 'kimi', fixtureName: 'kimi-skill', root: '.kimi-code/skills' },
+  ])('counts a $tool Skill call', async ({ tool, fixtureName, root }) => {
+    install(root);
+    await toolCall({ ...fixture(fixtureName), tool_name: 'Skill' }, tool);
+    expect(await credits()).toEqual([{ skill: SKILL, tool }]);
   });
 
   it('runs on the wildcard pass only: a stale `--matcher Skill` hook credits nothing', async () => {

@@ -474,11 +474,27 @@ async function buildHookChecks(
   hookToolPaths: TeamaiConfig['toolPaths'],
   baseDir: string,
   install: Install,
+  enabledAgents?: readonly string[],
 ): Promise<Check[]> {
   const checks: Check[] = [];
   const loginDeferredIn: string[] = [];
 
   for (const tool of Object.keys(toolPaths)) {
+    // Only Kimi creates its home, and pull only warns when it is missing, so a member who chose Kimi still gets the check.
+    if (tool === 'kimi') {
+      const { getKimiConfigPath, getKimiHome, hasKimiTeamaiHooks } = await import('./kimi-hooks.js');
+      const homeExists = await pathExists(getKimiHome());
+
+      if (!homeExists && !enabledAgents?.includes('kimi')) continue;
+      checks.push({
+        name: `teamai hooks in Kimi Code config (${getKimiConfigPath()})`,
+        source: 'local',
+        check: hasKimiTeamaiHooks,
+        fix: homeExists ? 'Run `teamai hooks inject` to inject/update hooks' : `Run Kimi Code once to create ${getKimiHome()}, then run \`teamai hooks inject\``,
+      });
+      continue;
+    }
+
     if (tool === 'kiro') {
       if (!await pathExists(path.join(getUserHome(), '.kiro'))) continue;
       const { hasKiroHooks } = await import('./kiro-hooks.js');
@@ -991,7 +1007,7 @@ export async function buildChecks(ctx: DoctorContext, stage: CheckStage = 'docto
     ...buildToolHomeChecks(localConfig),
     ...await buildEnabledToolChecks(ctx),
     ...await buildHeldSurfaceChecks(ctx),
-    ...await buildHookChecks(toolPaths, hookToolPaths, baseDir, installOf(teamConfig ?? { toolPaths }, localConfig)),
+    ...await buildHookChecks(toolPaths, hookToolPaths, baseDir, installOf(teamConfig ?? { toolPaths }, localConfig), localConfig.enabledAgents),
     ...await buildDeliveryChecks(ctx),
     ...await buildSkillDirChecks(ctx),
     ...await buildRecordedPlaceChecks(ctx, 'rules'),

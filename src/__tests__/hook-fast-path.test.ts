@@ -58,6 +58,11 @@ describe('argvVerdict', () => {
     expect(argvVerdict([...READ, '--matcher', 'TodoWrite'], {}, 'darwin')).toEqual({ kind: 'full' });
   });
 
+  it('runs Kimi through the full dispatch for its prompt and reply conversion', () => {
+    expect(argvVerdict(['hook-dispatch', 'prompt-submit', '--tool', 'kimi'], {}, 'darwin')).toEqual({ kind: 'full' });
+    expect(argvVerdict(['hook-dispatch', 'post-tool-use', '--tool', 'kimi'], {}, 'darwin')).toEqual({ kind: 'full' });
+  });
+
   // The fast path cannot load the tool table, so its list of these tools is a copy of `hooks.needsBundle`.
   it.each(TOOL_IDS)('takes the full dispatch for %s exactly when TOOLS says its hooks need the bundle', (tool) => {
     for (const event of ['post-tool-use', 'prompt-submit']) {

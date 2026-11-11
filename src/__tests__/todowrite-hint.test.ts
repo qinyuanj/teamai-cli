@@ -218,6 +218,10 @@ describe('the TodoWrite hint comes from the PostToolUse * pass (#1788)', () => {
     expect(await wildcardReply(tool)).toContain('[teamai:todowrite-hint]');
   });
 
+  it('nudges Kimi when its TodoList call arrives through the wildcard pass', async () => {
+    expect(await wildcardReply('kimi', 'TodoList')).toContain('[teamai:todowrite-hint]');
+  });
+
   it('says nothing for a tool call other than TodoWrite', async () => {
     expect(await wildcardReply('claude', 'Read')).toBeNull();
   });

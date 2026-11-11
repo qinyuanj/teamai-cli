@@ -570,6 +570,28 @@ const ROWS: readonly MatrixRow[] = [
     existingDirs: ['~/.config/muse'], installed: { probe: '~/.config/muse', met: true },
     source: "Muse 1.4.10 session log: teamai's user-level SessionStart hook adds a project's rules in every workspace (#946)",
   },
+  {
+    tool: 'kimi', scope: 'user',
+    writes: [{ at: '~/.kimi-code/AGENTS.md', owned: false, header: null }],
+    existingDirs: ['~/.kimi-code'], installed: { probe: '~/.kimi-code', met: true },
+    reads: [{ at: '~/.kimi-code/AGENTS.md', when: 'always' }],
+    source: 'Kimi Code 2.4.1: user AGENTS.md supplied a measured rule word',
+  },
+  {
+    tool: 'kimi', scope: 'user', env: { KIMI_CODE_HOME: '/kimi' },
+    writes: [{ at: '/kimi/AGENTS.md', owned: false, header: null }],
+    existingDirs: ['/kimi'], installed: { probe: '/kimi', met: true },
+    reads: [{ at: '/kimi/AGENTS.md', when: 'always' }],
+    source: 'Kimi Code 2.4.1: KIMI_CODE_HOME moves user inline rules with the whole home',
+  },
+  {
+    tool: 'kimi', scope: 'project',
+    writes: [{ at: '<root>/.kimi-code/AGENTS.md', owned: false, header: null }],
+    existingDirs: ['<root>/.kimi-code'], installed: { probe: '<root>/.kimi-code', met: true },
+    reads: [{ at: '<root>/.kimi-code/AGENTS.md', when: 'cwdOnly' }],
+    broken: { 'project-subdir': { reason: 'cwd-only', issue: '#15' } },
+    source: 'Kimi Code 2.4.1: project .kimi-code/AGENTS.md supplied a measured rule word',
+  },
 ];
 
 describeLocateMatrix('rules', ROWS);

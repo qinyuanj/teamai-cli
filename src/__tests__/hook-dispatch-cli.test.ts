@@ -593,6 +593,16 @@ describe('parseStdin', () => {
     expect(result.hook_event_name).toBe('Stop');
   });
 
+  it('joins Kimi prompt content parts and leaves a plain prompt unchanged', () => {
+    const stdin = parseStdin(JSON.stringify({
+      hook_event_name: 'UserPromptSubmit',
+      prompt: [{ type: 'text', text: 'first' }, { type: 'image', url: 'x' }, { type: 'text', text: 'second' }],
+    }), 'prompt-submit');
+
+    expect(stdin.prompt).toBe('first\nsecond');
+    expect(parseStdin(JSON.stringify({ prompt: 'plain' }), 'prompt-submit').prompt).toBe('plain');
+  });
+
   it('maps lower-case event aliases to their canonical hook names', () => {
     const result = parseStdin('', 'session-start');
     expect(result.hook_event_name).toBe('SessionStart');

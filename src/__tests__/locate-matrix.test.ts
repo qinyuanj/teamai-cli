@@ -14,6 +14,28 @@ const OPENCLAW_SOURCE = 'OpenClaw agents/agent-scope-config.ts and agents/worksp
 
 const ROWS: readonly FilesRow[] = [
   {
+    tool: 'kimi', scope: 'user',
+    writes: ['~/.kimi-code/skills'],
+    existingDirs: ['~/.kimi-code'], installed: { probe: '~/.kimi-code', met: true },
+    reads: [{ at: '~/.kimi-code/skills', when: 'always' }],
+    source: 'Kimi Code 2.4.1: user skills under KIMI_CODE_HOME',
+  },
+  {
+    tool: 'kimi', scope: 'user', env: { KIMI_CODE_HOME: '/kimi' },
+    writes: ['/kimi/skills'],
+    existingDirs: ['/kimi'], installed: { probe: '/kimi', met: true },
+    reads: [{ at: '/kimi/skills', when: 'always' }],
+    source: 'Kimi Code 2.4.1: KIMI_CODE_HOME moves the whole home',
+  },
+  {
+    tool: 'kimi', scope: 'project',
+    writes: ['<root>/.kimi-code/skills'],
+    existingDirs: ['<root>/.kimi-code'], installed: { probe: '<root>/.kimi-code', met: true },
+    reads: [{ at: '<root>/.kimi-code/skills', when: 'cwdOnly' }],
+    broken: { 'project-subdir': { reason: 'cwd-only', issue: '#14' } },
+    source: 'Kimi Code 2.4.1: a project skill load was observed from .kimi-code/skills',
+  },
+  {
     tool: 'opencode', scope: 'user',
     writes: ['~/.config/opencode/skills'],
     existingDirs: ['~/.config/opencode'], installed: { probe: '~/.config/opencode', met: true },

@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { ResourceHandler, type PlacementRecords } from './base.js';
-import type { CopyOrigin, ResourceItem, ResourceItemStatus, DeliveryTarget, TeamaiConfig, LocalConfig } from '../types.js';
+import type { CopyOrigin, ResourceItem, ResourceItemStatus, DeliveryTarget, TeamaiConfig, LocalConfig, Scope } from '../types.js';
 import { isDraft, listFilesRecursive, pathExists, copyFile, ensureDir, remove, fileContentEqual, getFileMtime, listDirs, readFileSafe, writeFile, pruneEmptyDirs, fileHash } from '../utils/fs.js';
 import { log } from '../utils/logger.js';
 import { RESOURCE_LAYOUTS, Resources, type ResourceDiagnostic } from './resolver.js';
@@ -1194,12 +1194,8 @@ export class RulesHandler extends ResourceHandler {
   }
 
   /**
-   * The user-scope part of a rules sync for each tool with no rules format:
-   * the team rules go into a file only that tool reads (`userRulesFile`: the
-   * Codex family's AGENTS.md, ZCode, DeepSeek Harness, the OpenClaw
-   * workspace, Pi, JoyCode's rules.txt). A project pull writes none of them;
-   * there the session-start hook (the Codex family, ZCode, DeepSeek Harness)
-   * or Pi's extension adds the rules (#938, #946).
+   * Inline team rules into each tool's instructions file. Most tools use this
+   * only in user scope; Kimi 2.4.1 also reads its project .kimi-code/AGENTS.md.
    * Public so the "Already synced" pull can run it after a CLI upgrade.
    * Returns whether every such file now holds `rules`: one that does not may
    * still name the files of a rule folder the team removed.
@@ -1213,8 +1209,6 @@ export class RulesHandler extends ResourceHandler {
   ): Promise<boolean> {
     if (localConfig.scope !== 'user') {
       await this.removeStaleProjectSoulRules(localConfig, installOf(teamConfig, localConfig));
-
-      return true;
     }
 
     let allWritten = true;
@@ -1795,9 +1789,9 @@ function rulesDirOf(location: Location<'rules'>): string | null {
   return own?.kind === 'dir' ? own.path : null;
 }
 
-/** How doctor names the file `tool` reads the team rules from in user scope, inlined there; null for a tool that reads rule files. */
-export function inlineRulesLabelOf(tool: string): string | null {
-  const channel = channelsOf(tool).rules.user;
+/** How doctor names the file `tool` reads the team rules from in `scope`, inlined there; null for a tool that reads rule files. */
+export function inlineRulesLabelOf(tool: string, scope: Scope = 'user'): string | null {
+  const channel = channelsOf(tool).rules[scope];
 
   return channel !== 'none' && channel !== 'unknown' && channel.channel === 'inline' ? channel.label : null;
 }
@@ -1809,7 +1803,7 @@ export function inlineRulesLabelOf(tool: string): string | null {
  * reads rule files.
  */
 export async function inlineRulesLocationOf(tool: string, install: Install): Promise<Location<'blocks'> | null> {
-  return install.scope === 'user' && inlineRulesLabelOf(tool) !== null ? locate(tool, 'blocks', install) : null;
+  return inlineRulesLabelOf(tool, install.scope) !== null ? locate(tool, 'blocks', install) : null;
 }
 
 /** The `readable-config` gate `location` does not meet: teamai cannot read the config that names the tool's rules file. */
@@ -2070,10 +2064,9 @@ export async function inlinedRulesText(rules: ResourceItem[], at: RuleTextContex
 }
 
 /**
- * The team-rules block for the user-scope file a tool with no rules format
- * reads (`userRulesFile`: the Codex family, #938; ZCode, DeepSeek Harness,
- * OpenClaw, Pi, JoyCode, #946), markers included. Null when no rule has a body. The body is
- * the same render Hermes gets in SOUL.md.
+ * The team-rules block for a tool's inline instructions file, markers
+ * included. Null when no rule has a body. The body is the same render Hermes
+ * gets in SOUL.md.
  */
 export async function teamRulesBlock(rules: ResourceItem[], at: RuleTextContext): Promise<string | null> {
   // A marker anywhere in a rule body would cut the block short on the next

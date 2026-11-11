@@ -132,6 +132,8 @@ interface RemovalPlan {
   /** teamai's OMP extension in every profile that has one (~/.omp/agent/extensions/teamai-hooks.ts, ~/.omp/profiles/<name>/agent/…). */
   ompHookFiles: string[];
   kiroHookFile: string | null;
+  /** Kimi's config.toml while it holds teamai entries: only those are removed. */
+  kimiConfigPath: string | null;
   agyHookFile: string | null;
   /** Pi extension files owned by this scope (global for user, legacy project copy for project). */
   piHookFiles: string[];
@@ -274,6 +276,8 @@ interface ToolResources {
   opencodePluginDirs: string[];
   ompHookFiles: string[];
   kiroHookFile: string | null;
+  /** Kimi's config.toml while it holds teamai entries: only those are removed. */
+  kimiConfigPath: string | null;
   agyHookFile: string | null;
   piHookFiles: string[];
   dshHookFile: string | null;
@@ -311,6 +315,7 @@ function hasToolResources(r: ToolResources): boolean {
     r.opencodePluginDirs.length > 0 ||
     r.ompHookFiles.length > 0 ||
     r.kiroHookFile !== null ||
+    r.kimiConfigPath !== null ||
     r.agyHookFile !== null ||
     r.piHookFiles.length > 0 ||
     r.dshHookFile !== null ||
@@ -359,9 +364,9 @@ const INSTRUCTION_BLOCK_STARTS: Record<InstructionBlock, string> = {
  * (`inlineRulesLabelOf`; Hermes keeps its own SOUL.md block). Nobody writes the
  * legacy `[teamai:rules]` block any more.
  */
-function instructionBlocksWrittenBy(tool: string): string[] {
+function instructionBlocksWrittenBy(tool: string, scope: Scope): string[] {
   return Object.entries(INSTRUCTION_BLOCK_STARTS).flatMap(([block, start]) =>
-    (block !== 'team-rules' || (tool !== 'hermes' && inlineRulesLabelOf(tool) !== null) ? [start] : []));
+    (block !== 'team-rules' || (tool !== 'hermes' && inlineRulesLabelOf(tool, scope) !== null) ? [start] : []));
 }
 
 /**
@@ -544,7 +549,7 @@ async function discoverToolResources(
   globalAdapters = scope === 'user',
 ): Promise<ToolResources> {
   const res: ToolResources = {
-    hookFiles: [], openclawHookDirs: [], opencodePluginDirs: [], ompHookFiles: [], kiroHookFile: null, agyHookFile: null, piHookFiles: [], dshHookFile: null, bridgedTeamHookFiles: [],
+    hookFiles: [], openclawHookDirs: [], opencodePluginDirs: [], ompHookFiles: [], kiroHookFile: null, kimiConfigPath: null, agyHookFile: null, piHookFiles: [], dshHookFile: null, bridgedTeamHookFiles: [],
     claudeMdFiles: [], retiredInstructionFiles: [], opencodeInstructions: [], keptGlobal: [], skillDirs: [], keptSkillDirs: [], keptFiles: [], ruleFiles: [], keptRuleFiles: [], opencodeOwnedGlobs: [], agentFiles: [], joycodeAgentIndexes: [],
   };
 
@@ -616,6 +621,14 @@ async function discoverToolResources(
     if (await ownsKiroHooks()) {
       if (globalAdapters) res.kiroHookFile = kiroHookFile();
       else res.keptGlobal.push(kiroHookFile());
+    }
+  } else if (tool === 'kimi') {
+    // One user-level config.toml every install shares: only a user-scope uninstall takes teamai's entries.
+    const { getKimiConfigPath, hasKimiTeamaiHooks } = await import('./kimi-hooks.js');
+
+    if (await hasKimiTeamaiHooks()) {
+      if (globalAdapters) res.kimiConfigPath = getKimiConfigPath();
+      else res.keptGlobal.push(getKimiConfigPath());
     }
   } else if (tool === 'agy') {
     // One user-wide hooks.json; teamai's entry is the one named `teamai`.
@@ -1565,6 +1578,7 @@ async function buildRemovalPlan(
     opencodePluginDirs: [],
     ompHookFiles: [],
     kiroHookFile: null,
+    kimiConfigPath: null,
     agyHookFile: null,
     piHookFiles: [],
     dshHookFile: null,
@@ -1633,7 +1647,7 @@ async function buildRemovalPlan(
 
   for (const [tool, resources] of perTool) {
     if (toolsToMerge.includes(tool) || !activeTools.has(tool)) continue;
-    const written = instructionBlocksWrittenBy(tool);
+    const written = instructionBlocksWrittenBy(tool, localConfig.scope);
 
     for (const file of resources.claudeMdFiles) {
       const kept = retainedBlocks.get(file) ?? new Set<string>();
@@ -1683,6 +1697,8 @@ async function buildRemovalPlan(
     plan.bridgedTeamHookFiles.push(...res.bridgedTeamHookFiles);
 
     if (res.kiroHookFile) plan.kiroHookFile = res.kiroHookFile;
+
+    if (res.kimiConfigPath) plan.kimiConfigPath = res.kimiConfigPath;
 
     if (res.agyHookFile) plan.agyHookFile = res.agyHookFile;
     plan.piHookFiles.push(...res.piHookFiles);
@@ -1920,6 +1936,7 @@ function isPlanEmpty(plan: RemovalPlan): boolean {
     plan.bridgedTeamHookFiles.length === 0 &&
     plan.deliveredFolderDirs.length === 0 &&
     plan.kiroHookFile === null &&
+    plan.kimiConfigPath === null &&
     plan.agyHookFile === null &&
     plan.piHookFiles.length === 0 &&
     plan.dshHookFile === null &&
@@ -2020,6 +2037,8 @@ function printSummary(plan: RemovalPlan, agentFilter?: string): void {
   }
 
   if (plan.kiroHookFile !== null) console.log(`   Kiro Hooks: ${plan.kiroHookFile}`);
+
+  if (plan.kimiConfigPath !== null) console.log(`   Kimi Code Hooks (teamai entries only): ${plan.kimiConfigPath}`);
 
   if (plan.agyHookFile !== null) console.log(`   Antigravity Hooks: ${plan.agyHookFile} (the "teamai" entry)`);
 
@@ -2908,6 +2927,22 @@ async function executeRemoval(
     await removeKiroHooks();
   }
 
+  if (plan.kimiConfigPath !== null) {
+    try {
+      const { reconcileKimiHooks } = await import('./kimi-hooks.js');
+      await reconcileKimiHooks('removal');
+      const remaining = await readFileSafe(plan.kimiConfigPath);
+
+      if (remaining?.trim() === '' && await gitUntracked(plan.kimiConfigPath, 'entry')) {
+        await remove(plan.kimiConfigPath);
+        log.success(`Removed ${plan.kimiConfigPath}: no Kimi Code configuration left in it`);
+      }
+    } catch (e) {
+      hooksLeft.push({ what: plan.kimiConfigPath, tool: 'kimi' });
+      log.warn(`Failed to remove Kimi Code hooks from ${plan.kimiConfigPath}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
   if (plan.agyHookFile !== null) {
     try {
       const { reconcileAgyHooks } = await import('./agy-hooks.js');
@@ -3391,10 +3426,19 @@ async function sweepCreatedLeftovers(plan: RemovalPlan, hooksLeft: ReadonlyArray
 
 /**
  * The directories uninstall removed teamai's skills, rules and agents from, deepest first. Above a rule file, each
- * folder up to the tool's rules directory; never a directory outside one, so a tool's own root stays.
+ * folder up to the tool's rules directory; never a directory outside one. Kimi's adapter-owned root also goes when empty.
  */
 function emptiedDirs(plan: RemovalPlan): string[] {
   const dirs = new Set([...plan.skillDirs.map(({ dir }) => path.dirname(dir)), ...plan.agentFiles.map((file) => path.dirname(file))]);
+
+  for (const { dir } of plan.skillDirs) {
+    const skillsRoot = path.dirname(dir);
+    const toolRoot = path.dirname(skillsRoot);
+
+    if (path.basename(toolRoot) === '.kimi-code') dirs.add(toolRoot);
+  }
+
+  if (plan.kimiConfigPath !== null) dirs.add(path.dirname(plan.kimiConfigPath));
   const ownedRuleFiles = plan.claudeMdFiles.flatMap(({ path: file, owned }) => (owned ? [file] : []));
 
   for (const file of [...plan.ruleFiles, ...ownedRuleFiles]) {

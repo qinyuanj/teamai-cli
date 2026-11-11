@@ -21,6 +21,7 @@ import { getUserHome } from './utils/home.js';
 import { pathExists } from './utils/fs.js';
 import { hasPiHooks, removePiHooks, PI_HOOK_FILE } from './pi-hooks.js';
 import { hasKiroHooks, kiroHookFile, removeKiroHooks } from './kiro-hooks.js';
+import { getKimiConfigPath, getKimiHome, hasKimiTeamaiHooks } from './kimi-hooks.js';
 
 type HookListStatus = HookStatus | 'not configured';
 
@@ -131,6 +132,7 @@ async function removeAdapterHooks(adapter: HookAdapterId, dir: string): Promise<
         case 'dsh-hooks':
         case 'kiro-hooks':
         case 'agy-hooks':
+        case 'kimi-hooks':
             return;
         default: {
             const unhandled: never = adapter;
@@ -226,6 +228,12 @@ export async function hooksList(_options: GlobalOptions): Promise<void> {
         if (tool === 'kiro') {
             if (!await pathExists(path.join(getUserHome(), '.kiro'))) continue;
             rows.push({ tool, status: await hasKiroHooks() ? 'installed' : 'missing', settingsPath: formatDisplayPath(kiroHookFile()), builtinDefs: installedBuiltinHookDefs(tool, false) });
+            continue;
+        }
+
+        if (tool === 'kimi') {
+            if (!await pathExists(getKimiHome())) continue;
+            rows.push({ tool, status: await hasKimiTeamaiHooks() ? 'installed' : 'missing', settingsPath: formatDisplayPath(getKimiConfigPath()), builtinDefs: installedBuiltinHookDefs(tool, false) });
             continue;
         }
 

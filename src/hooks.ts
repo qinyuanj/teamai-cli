@@ -3333,6 +3333,7 @@ async function rewireBridgedTeamHooks(tool: string): Promise<void> {
     case 'omp-extension':
     case 'pi-extension':
     case 'dsh-hooks':
+    case 'kimi-hooks':
       return;
     default: {
       const unhandled: never = channel.adapter;
@@ -3787,6 +3788,7 @@ async function isBridgedToolInstalled(tool: string, baseDir: string, installedBa
     case 'openclaw-hook': return await openclawWorkspaceDir() !== null;
     case 'agy-hooks': return pathExists(toolHome('agy'));
     case 'dsh-hooks': return false;
+    case 'kimi-hooks': return pathExists(toolHome('kimi'));
     default: {
       const unhandled: never = channel.adapter;
 
@@ -3950,6 +3952,34 @@ async function reconcilePiExtension(
   if (earlier) await removePiHooks(earlier);
 }
 
+/** Kimi homes already reported missing in this process (pull reconciles several scopes). */
+const reportedMissingKimiHomes = new Set<string>();
+
+/**
+ * Install teamai's hooks into Kimi's config.toml when its home exists. Only Kimi creates that home, so a missing one
+ * is skipped, with a warning when the member chose Kimi (`explicitAgents`). Everyone else keeps a quiet pull: Kimi is
+ * in every team's tool paths, and a `.kimi-code/` a repo commits does not mean this member runs it.
+ */
+async function injectKimiHooksOrWarn(explicitAgents: readonly string[] | undefined): Promise<void> {
+  const { getKimiHome, reconcileKimiHooks } = await import('./kimi-hooks.js');
+  const kimiHome = getKimiHome();
+
+  if (await pathExists(kimiHome)) {
+    await reconcileKimiHooks('injection');
+
+    return;
+  }
+
+  if (!explicitAgents?.includes('kimi') || reportedMissingKimiHomes.has(kimiHome)) {
+    log.debug(`Kimi Code hooks skipped: ${kimiHome} does not exist`);
+
+    return;
+  }
+
+  reportedMissingKimiHomes.add(kimiHome);
+  log.warn(`Kimi Code hooks skipped: ${kimiHome} does not exist (run Kimi Code once, then re-run teamai pull)`);
+}
+
 /**
  * Inject teamai built-in hooks into all AI tool settings.
  * Only writes to tools whose root directory already exists on disk,
@@ -3973,6 +4003,12 @@ export async function injectHooksToAllTools(toolPaths: Record<string, { settings
         await injectKiroHooks(resolvedBaseDir);
       } catch (e) {
         log.warn(`Failed to inject Kiro hooks: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    } else if (tool === 'kimi') {
+      try {
+        await injectKimiHooksOrWarn(filterAgents);
+      } catch (e) {
+        log.warn(`Failed to inject Kimi Code hooks: ${e instanceof Error ? e.message : String(e)}`);
       }
     } else if (tool === 'agy') {
       try {
@@ -4078,7 +4114,7 @@ export async function reconcileHooksToAllTools(
   teamDefs: HookDef[],
   manifestPath: string,
   opts: {
-    removeAll?: boolean; builtinOverride?: BuiltinHookOverride; builtinFormFrom?: BuiltinHookFormSource; filterAgents?: string[]; settingsOnly?: boolean; installedBaseDir?: string; teamHookProjectRoot?: string; teamHookChildRoots?: readonly string[]; heldTeamHookIds?: readonly string[]; scope?: Scope; builtinsOnly?: BuiltinsOnly; mainCheckout?: MainCheckoutHooks | null; teamHookHistory?: TeamHookHistory; codebuddyDualRunner?: boolean;
+    removeAll?: boolean; builtinOverride?: BuiltinHookOverride; builtinFormFrom?: BuiltinHookFormSource; filterAgents?: string[]; explicitAgents?: string[]; settingsOnly?: boolean; installedBaseDir?: string; teamHookProjectRoot?: string; teamHookChildRoots?: readonly string[]; heldTeamHookIds?: readonly string[]; scope?: Scope; builtinsOnly?: BuiltinsOnly; mainCheckout?: MainCheckoutHooks | null; teamHookHistory?: TeamHookHistory; codebuddyDualRunner?: boolean;
     /**
      * The active config's `toolRoots`, so the gate probes a member's recorded
      * root rather than the path's two-segment shape (see `toolGateRoot`).
@@ -4169,6 +4205,26 @@ export async function reconcileHooksToAllTools(
         else await injectKiroHooks(opts.installedBaseDir ?? baseDir);
       } catch (e) {
         log.warn(`Failed to reconcile Kiro hooks: ${e instanceof Error ? e.message : String(e)}`);
+        opts.unwritten?.push(tool);
+      }
+
+      continue;
+    }
+
+    // Kimi keeps its hooks in its user-level config.toml, in every scope. It is a global adapter: a settings-only
+    // sweep of a secondary location must not touch it.
+    if (tool === 'kimi') {
+      if (opts.settingsOnly) continue;
+
+      try {
+        if (opts.removeAll) {
+          const { reconcileKimiHooks } = await import('./kimi-hooks.js');
+          await reconcileKimiHooks('removal');
+        } else {
+          await injectKimiHooksOrWarn(opts.explicitAgents ?? opts.filterAgents);
+        }
+      } catch (e) {
+        log.warn(`Failed to reconcile Kimi Code hooks: ${e instanceof Error ? e.message : String(e)}`);
         opts.unwritten?.push(tool);
       }
 
@@ -5175,6 +5231,8 @@ export async function reconcileTeamHooksForConfig(
     builtinOverride: builtin,
     builtinFormFrom: opts.builtinFormFrom,
     filterAgents,
+    // The explicit whitelist, not the widened filter above.
+    explicitAgents: explicitlySelectedAgents ?? [],
     teamHookProjectRoot: localConfig.scope === 'project' && !isSelfMode(localConfig)
       ? localConfig.projectRoot
       : undefined,

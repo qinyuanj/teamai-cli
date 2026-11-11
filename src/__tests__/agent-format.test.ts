@@ -35,6 +35,7 @@ import {
   reverseFromJoycode,
   reverseFromOpencode,
   renderForTool,
+  reverseByTool,
   mergeReverseResults,
 } from '../resources/agent-format.js';
 import type { AgentSpec, ToolName, ParseResult } from '../resources/agent-format.js';
@@ -620,6 +621,44 @@ describe('reverseFromOpencode', () => {
     expect(result.spec.description).toBe(spec.description);
     expect(result.spec.instructions).toBe(spec.instructions);
     expect(result.spec.model).toBe('anthropic/claude-sonnet-4');
+  });
+});
+
+describe('Kimi agent format', () => {
+  it('renders the measured Markdown format with short tool names and no model field', () => {
+    const { ext, content } = renderForTool(makeSpec({
+      model: 'not-a-kimi-field',
+      tools: ['Bash', 'Read', 'Grep', 'Glob'],
+      tool_extras: { kimi: { disallowedTools: 'Task, CustomTool' } },
+    }), 'kimi');
+
+    expect(ext).toBe('.md');
+    expect(content).toMatch(/tools:\n  - Bash\n  - Read\n  - Grep\n  - Glob/);
+    expect(content).toMatch(/disallowedTools:\n  - Agent\n  - CustomTool/);
+    expect(content).not.toMatch(/^model:/m);
+    expect(content).toContain('You are a helpful assistant.');
+  });
+
+  it('reverses Kimi permissions and private fields without changing tool names', () => {
+    const result = reverseByTool('kimi', '/agents/reviewer.md', `---
+description: Review code
+tools: Bash, Read, CustomTool
+disallowedTools:
+  - Write
+whenToUse: Pull requests
+---
+Review the diff.
+`);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.spec).toEqual({
+      name: 'reviewer',
+      description: 'Review code',
+      instructions: 'Review the diff.',
+      tools: ['Bash', 'Read', 'CustomTool'],
+      tool_extras: { kimi: { disallowedTools: ['Write'], whenToUse: 'Pull requests' } },
+    });
   });
 });
 

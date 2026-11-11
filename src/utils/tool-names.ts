@@ -22,6 +22,7 @@ const IDE_TO_CLI = new Map(Object.entries({
   task: 'Task',
   skill: 'Skill',
   read_skill: 'Skill', // Muse Code
+  TodoList: 'TodoWrite', // Kimi Code
 }));
 
 export function normalizeToolName(name: string): string {
