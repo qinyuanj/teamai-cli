@@ -343,9 +343,7 @@ export async function fetchLatestVersion(
   }
 }
 
-/**
- * Check if the cached version check is still valid
- */
+/** Check if the cached version check is still valid. */
 export function isCacheValid(lastCheck: string | null, ttlMs: number = CACHE_TTL_MS): boolean {
   if (!lastCheck) return false;
 

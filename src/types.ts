@@ -760,11 +760,6 @@ export const TeamaiConfigBaseSchema = z.object({
   repo: z.string(),
   provider: ProviderNameSchema.default('tgit'),
   /**
-   * @deprecated Ignored by `teamai init` (issue #250). Local install scope is
-   * decided only by CLI `--scope` / default. Kept optional for old teamai.yaml files.
-   */
-  scope: ScopeEnum.optional(),
-  /**
    * Self mode marker. Committed to main inside <repo>/.teamai/teamai.yaml
    * so it travels with `git clone`. When a teammate clones a repo carrying
    * `mode: self` but has no local config yet, teamai auto-bootstraps the machine
