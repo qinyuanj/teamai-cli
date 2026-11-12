@@ -38,6 +38,7 @@ import {
   getGiteaToken,
   giteaBaseUrl,
   giteaAuthHeaderValue,
+  hasNextGiteaPage,
 } from '../providers/gitea/gitea-api.js';
 import { giteaListOrgRepos } from '../providers/gitea/org.js';
 import { fetchGiteaPR } from '../providers/gitea/mr-fetch.js';
@@ -158,6 +159,18 @@ describe('parseGiteaRepoInput', () => {
 });
 
 // ─── base URL + token resolution ────────────────────────
+
+describe('Gitea pagination', () => {
+  it('stops at a full final page when Link has no next relation', () => {
+    const response = new Response('[]', {
+      headers: {
+        link: '<https://gitea.example.com/api/v1/repos/o/r/pulls?limit=50&page=1>; rel="prev"',
+      },
+    });
+
+    expect(hasNextGiteaPage(response, 50, 50)).toBe(false);
+  });
+});
 
 describe('giteaBaseUrl', () => {
   const originalEnv = { ...process.env };

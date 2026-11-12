@@ -103,8 +103,12 @@ export function authHeaders(token: string) {
   };
 }
 
-/** Whether a list endpoint has another page: Gitea answers `x-next-page` when one exists; a short page is the last one either way. */
+/** Whether a list endpoint has another page, from Gitea's explicit headers or the page-size fallback. */
 export function hasNextGiteaPage(response: Response, count: number, limit: number): boolean {
+  const link = response.headers?.get('link');
+
+  if (link) return /[;,]\s*rel="next"/.test(link);
+
   return !!response.headers?.get('x-next-page') || count >= limit;
 }
 
